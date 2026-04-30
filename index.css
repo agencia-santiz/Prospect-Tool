@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════
+   SANTIZ CRIMSON DESIGN SYSTEM — index.css
+   Warm cream canvas · Crimson accents · Border-first depth
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --santiz-crimson: #ba0c2f;
+  --santiz-crimson-light: #d4143a;
+  --santiz-crimson-dark: #8a0923;
+  --santiz-crimson-glow: rgba(186, 12, 47, 0.12);
+  --santiz-crimson-tint: #f9e6ea;
+  --santiz-cream: #fffefb;
+  --santiz-off-white: #fffdf9;
+  --santiz-black: #000000;
+  --santiz-charcoal: #36302a;
+  --santiz-warm-gray: #8a8278;
+  --santiz-sand: #c5b8a8;
+  --santiz-sand-light: #ebe6dd;
+  --santiz-gold: #c9a046;
+  --santiz-gold-light: #d4b366;
+  --santiz-success: #2a9d6f;
+  --santiz-warning: #d4913d;
+  --santiz-info: #3a7bc8;
+}
+
+/* ─── Global Reset & Base ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--santiz-cream);
+  color: var(--santiz-black);
+  font-family: 'Inter', Helvetica, Arial, sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background-color: var(--santiz-crimson-tint);
+  color: var(--santiz-crimson-dark);
+}
+
+/* ─── Custom Scrollbar — Warm Sand ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--santiz-sand);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--santiz-warm-gray);
+}
+
+/* ─── Focus Ring — Crimson Glow ─── */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--santiz-crimson-glow);
+}
+
+/* ─── Utility: Smooth Transitions ─── */
+.transition-santiz {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

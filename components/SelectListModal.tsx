@@ -40,10 +40,10 @@ const SelectListModal: React.FC<SelectListModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-nexus-sidebar/80 backdrop-blur-sm animate-fadeIn p-4">
-      <div className="bg-white rounded-[10px] p-6 w-full max-w-md shadow-2xl border border-nexus-border relative">
+      <div className="bg-nexus-surface rounded-[10px] p-6 w-full max-w-md shadow-float border border-nexus-sand relative">
         <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-nexus-slate hover:text-nexus-dark"
+            className="absolute top-4 right-4 text-nexus-warmGray hover:text-nexus-dark"
         >
             <X className="w-5 h-5" />
         </button>
@@ -113,7 +113,7 @@ const SelectListModal: React.FC<SelectListModalProps> = ({
               </div>
            )}
 
-           <div className="flex justify-end gap-3 pt-4 border-t border-nexus-bg">
+           <div className="flex justify-end gap-3 pt-4 border-t border-nexus-sandLight">
               <button 
                 type="button" 
                 onClick={onClose}

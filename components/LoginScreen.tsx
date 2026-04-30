@@ -32,9 +32,9 @@ const LoginScreen: React.FC = () => {
             </div>
             <h2 className="text-4xl font-bold leading-tight mb-4">
                Transforme dados em <br/>
-               <span className="text-nexus-royal">receita previsível.</span>
+               <span className="text-nexus-gold">receita previsível.</span>
             </h2>
-            <p className="text-nexus-slate text-lg max-w-md opacity-80">
+            <p className="text-nexus-sand text-lg max-w-md opacity-90">
                Junte-se a milhares de empresas B2B que usam o Bloom Leads para enriquecer leads e fechar negócios.
                <br/><br/>
                <span className="text-white font-bold bg-white/10 px-2 py-1 rounded">100% Gratuito & Ilimitado</span>
@@ -43,28 +43,28 @@ const LoginScreen: React.FC = () => {
 
          <div className="relative z-10 space-y-4">
              <div className="flex items-center gap-3">
-                 <CheckCircle2 className="text-nexus-royal w-5 h-5" />
+                 <CheckCircle2 className="text-nexus-gold w-5 h-5" />
                  <span className="text-sm font-medium">Dados validados via Google Maps</span>
              </div>
              <div className="flex items-center gap-3">
-                 <CheckCircle2 className="text-nexus-royal w-5 h-5" />
+                 <CheckCircle2 className="text-nexus-gold w-5 h-5" />
                  <span className="text-sm font-medium">Pipeline de vendas integrado</span>
              </div>
              <div className="flex items-center gap-3">
-                 <CheckCircle2 className="text-nexus-royal w-5 h-5" />
+                 <CheckCircle2 className="text-nexus-gold w-5 h-5" />
                  <span className="text-sm font-medium">Extração de leads ilimitada</span>
              </div>
          </div>
       </div>
 
       {/* Right Panel - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-nexus-surface">
          <div className="w-full max-w-md space-y-8 animate-fadeIn">
              <div className="text-center lg:text-left">
                  <h2 className="text-3xl font-bold text-nexus-dark mb-2">
                      {isRegistering ? 'Crie sua conta Grátis' : 'Bem-vindo de volta'}
                  </h2>
-                 <p className="text-gray-500">
+                 <p className="text-nexus-warmGray">
                      {isRegistering ? 'Acesso ilimitado e gratuito para sempre.' : 'Acesse seu dashboard de prospecção.'}
                  </p>
              </div>
@@ -73,29 +73,29 @@ const LoginScreen: React.FC = () => {
                  <button 
                     onClick={() => loginGoogle()}
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded hover:bg-gray-50 transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-3 bg-nexus-surface border border-nexus-sand text-nexus-charcoal font-bold py-3 px-4 rounded hover:bg-nexus-sandLight transition-all shadow-subtle"
                  >
                      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
                      {loading ? 'Conectando...' : 'Continuar com Google'}
                  </button>
                  
                  <div className="relative flex items-center py-2">
-                     <div className="flex-grow border-t border-gray-200"></div>
-                     <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase font-bold">Ou via email</span>
-                     <div className="flex-grow border-t border-gray-200"></div>
+                     <div className="flex-grow border-t border-nexus-sand"></div>
+                     <span className="flex-shrink-0 mx-4 text-nexus-warmGray text-xs uppercase font-bold">Ou via email</span>
+                     <div className="flex-grow border-t border-nexus-sand"></div>
                  </div>
 
                  <form onSubmit={handleSubmit} className="space-y-4">
                      <div>
                          <label className="block text-xs font-bold text-nexus-dark mb-1">Email Corporativo</label>
                          <div className="relative">
-                             <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                             <Mail className="absolute left-3 top-3 w-4 h-4 text-nexus-warmGray" />
                              <input 
                                 type="email" 
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none"
+                                className="w-full pl-10 pr-4 py-2.5 border border-nexus-sand rounded text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none"
                                 placeholder="seu@empresa.com"
                              />
                          </div>
@@ -103,13 +103,13 @@ const LoginScreen: React.FC = () => {
                      <div>
                          <label className="block text-xs font-bold text-nexus-dark mb-1">Senha</label>
                          <div className="relative">
-                             <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                             <Lock className="absolute left-3 top-3 w-4 h-4 text-nexus-warmGray" />
                              <input 
                                 type="password" 
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none"
+                                className="w-full pl-10 pr-4 py-2.5 border border-nexus-sand rounded text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none"
                                 placeholder="••••••••"
                              />
                          </div>
@@ -118,14 +118,14 @@ const LoginScreen: React.FC = () => {
                      <button 
                         type="submit" 
                         disabled={loading}
-                        className="w-full bg-nexus-sidebar text-white font-bold py-3 px-4 rounded shadow-md hover:bg-nexus-sidebarHover transition-all flex items-center justify-center gap-2"
+                        className="w-full bg-nexus-royal text-white font-bold py-3 px-4 rounded shadow-md hover:bg-nexus-crimsonLight transition-all flex items-center justify-center gap-2"
                      >
                          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                          {isRegistering ? 'Criar Conta Grátis' : 'Entrar na Plataforma'}
                      </button>
                  </form>
 
-                 <div className="text-center text-sm text-gray-500">
+                 <div className="text-center text-sm text-nexus-warmGray">
                      {isRegistering ? 'Já tem uma conta?' : 'Ainda não tem conta?'}
                      <button 
                         onClick={() => setIsRegistering(!isRegistering)}
@@ -137,7 +137,7 @@ const LoginScreen: React.FC = () => {
              </div>
          </div>
          
-         <div className="mt-12 text-xs text-gray-400 text-center">
+         <div className="mt-12 text-xs text-nexus-warmGray text-center">
              &copy; 2025 Bloom Leads. Todos os direitos reservados.
              <br/>Política de Privacidade • Termos de Uso
          </div>

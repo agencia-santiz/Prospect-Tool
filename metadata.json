@@ -2,5 +2,10 @@
   "name": "Prospectur",
   "description": "A high-performance B2B prospecting tool.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "AI-Driven Lead Generation",
+    "Santiz Crimson Design System",
+    "Unified Sales Pipeline",
+    "Dynamic Map Integration"
+  ]
 }

@@ -9,7 +9,7 @@ interface LoadingBarProps {
 
 const LoadingBar: React.FC<LoadingBarProps> = ({ progress, status }) => {
   return (
-    <div className="w-full max-w-2xl mx-auto my-8 p-6 bg-white border border-gray-200 rounded-xl shadow-sm animate-fadeIn">
+    <div className="w-full max-w-2xl mx-auto my-8 p-6 bg-nexus-surface border border-nexus-sand rounded-xl shadow-subtle animate-fadeIn">
       <div className="flex justify-between items-end mb-2">
         <div className="flex items-center gap-2">
            {progress < 100 ? (
@@ -19,11 +19,11 @@ const LoadingBar: React.FC<LoadingBarProps> = ({ progress, status }) => {
            )}
            <span className="text-sm font-bold text-nexus-dark">{status}</span>
         </div>
-        <span className="text-xs font-bold text-nexus-slate">{Math.round(progress)}%</span>
+        <span className="text-xs font-bold text-nexus-warmGray">{Math.round(progress)}%</span>
       </div>
       
       {/* Progress Track */}
-      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-nexus-sandLight rounded-full overflow-hidden">
         <div 
             className="h-full bg-nexus-royal transition-all duration-300 ease-out relative"
             style={{ width: `${progress}%` }}
@@ -34,17 +34,17 @@ const LoadingBar: React.FC<LoadingBarProps> = ({ progress, status }) => {
 
       {/* Steps Visualization */}
       <div className="flex justify-between mt-4 px-1">
-          <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 10 ? 'text-nexus-royal' : 'text-gray-300'}`}>
+          <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 10 ? 'text-nexus-royal' : 'text-nexus-sand'}`}>
               <MapPin className="w-4 h-4" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Maps</span>
           </div>
-          <div className="h-px bg-gray-100 flex-1 mx-2 self-center"></div>
-          <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 40 ? 'text-nexus-royal' : 'text-gray-300'}`}>
+          <div className="h-px bg-nexus-sandLight flex-1 mx-2 self-center"></div>
+          <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 40 ? 'text-nexus-royal' : 'text-nexus-sand'}`}>
               <Search className="w-4 h-4" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Dados</span>
           </div>
-          <div className="h-px bg-gray-100 flex-1 mx-2 self-center"></div>
-           <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 75 ? 'text-nexus-royal' : 'text-gray-300'}`}>
+          <div className="h-px bg-nexus-sandLight flex-1 mx-2 self-center"></div>
+           <div className={`flex flex-col items-center gap-1 transition-colors ${progress > 75 ? 'text-nexus-royal' : 'text-nexus-sand'}`}>
               <Database className="w-4 h-4" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Enriquecimento</span>
           </div>

@@ -15,41 +15,56 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+              sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif'],
             },
             colors: {
               nexus: {
-                bg: '#F5F8FA',       // HubSpot-like Light Grey Background
-                surface: '#FFFFFF',  // Pure White
-                sidebar: '#182A3D',  // Obsidian/Navy (HubSpot Dark)
-                sidebarHover: '#23374D',
-                input: '#FFFFFF',    
-                slate: '#516f90',    // Cool Slate Text
-                primary: '#FF5C35',  // Secondary Action (Orange/Coral - HubSpot vibe)
-                royal: '#2563EB',    // Primary Blue
-                dark: '#33475b',     // Dark Slate (Primary Text)
-                border: '#CBD6E2',   // Light Blue-Grey Border
-                accent: '#E5F4FF'    // Very light blue hover
+                bg: '#fffefb',
+                surface: '#fffefb',
+                sidebar: '#000000',
+                sidebarHover: '#2e1f1f',
+                input: '#fffefb',
+                slate: '#8a8278',
+                primary: '#ba0c2f',
+                royal: '#ba0c2f',
+                dark: '#000000',
+                border: '#c5b8a8',
+                accent: '#f9e6ea',
+                gold: '#c9a046',
+                goldLight: '#d4b366',
+                crimsonLight: '#d4143a',
+                crimsonDark: '#8a0923',
+                sand: '#c5b8a8',
+                sandLight: '#ebe6dd',
+                charcoal: '#36302a',
+                warmGray: '#8a8278',
+                offWhite: '#fffdf9',
               }
             },
             boxShadow: {
-              'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-              'card': '0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
-              'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              'float': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              'subtle': '0 1px 2px 0 rgba(32, 21, 21, 0.04)',
+              'card': '0 1px 3px rgba(32, 21, 21, 0.06)',
+              'card-hover': '0 4px 12px rgba(186, 12, 47, 0.08)',
+              'float': '0 12px 24px rgba(32, 21, 21, 0.12)',
+              'crimson-glow': '0 0 0 3px rgba(186, 12, 47, 0.12)',
             },
             animation: {
-              fadeIn: 'fadeIn 0.2s ease-out',
+              fadeIn: 'fadeIn 0.3s ease-out',
               slideIn: 'slideIn 0.3s ease-out',
+              shimmer: 'shimmer 2s infinite',
             },
             keyframes: {
               fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
+                '0%': { opacity: '0', transform: 'translateY(4px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
               },
               slideIn: {
-                '0%': { transform: 'translateX(-100%)' },
-                '100%': { transform: 'translateX(0)' },
+                '0%': { transform: 'translateX(100%)', opacity: '0' },
+                '100%': { transform: 'translateX(0)', opacity: '1' },
+              },
+              shimmer: {
+                '0%': { transform: 'translateX(-100%) skewX(-12deg)' },
+                '100%': { transform: 'translateX(200%) skewX(-12deg)' },
               }
             }
           }
@@ -58,12 +73,12 @@
     </script>
     <style>
       body {
-        background-color: #F5F8FA;
-        color: #33475b;
+        background-color: #fffefb;
+        color: #000000;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
-      /* Custom Scrollbar */
+      /* Custom Scrollbar — Warm Sand */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -72,11 +87,16 @@
         background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #CBD6E2;
+        background: #c5b8a8;
         border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #99ACC2;
+        background: #8a8278;
+      }
+      /* Smooth focus rings */
+      *:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(186, 12, 47, 0.12);
       }
     </style>
   <script type="importmap">

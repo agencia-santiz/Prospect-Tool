@@ -39,19 +39,19 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-nexus-sidebar/80 backdrop-blur-sm animate-fadeIn p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-200 overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+      <div className="bg-nexus-surface rounded-xl shadow-float w-full max-w-md border border-nexus-sand overflow-hidden">
+        <div className="p-5 border-b border-nexus-sandLight flex justify-between items-center bg-nexus-offWhite">
           <div>
             <h3 className="font-bold text-nexus-dark text-lg">Adicionar ao Pipeline</h3>
-            <p className="text-xs text-gray-500 mt-1">Empresa: <span className="font-semibold text-nexus-royal">{company.nome_fantasia}</span></p>
+            <p className="text-xs text-nexus-warmGray mt-1">Empresa: <span className="font-semibold text-nexus-royal">{company.nome_fantasia}</span></p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={onClose} className="text-nexus-warmGray hover:text-nexus-charcoal transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-4">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+          <label className="block text-xs font-bold text-nexus-warmGray uppercase tracking-wide mb-2">
             Escolha o Funil de Destino
           </label>
           <div className="space-y-2">
@@ -60,8 +60,8 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
                 key={pipeline.id}
                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                   selectedPipelineId === pipeline.id 
-                    ? 'border-nexus-royal bg-blue-50/50 ring-1 ring-nexus-royal' 
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-nexus-royal bg-nexus-accent ring-1 ring-nexus-royal' 
+                    : 'border-nexus-sand hover:border-nexus-charcoal hover:bg-nexus-sandLight'
                 }`}
               >
                 <input
@@ -73,8 +73,8 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
                   className="w-4 h-4 text-nexus-royal border-gray-300 focus:ring-nexus-royal"
                 />
                 <div className="flex-1">
-                  <div className="font-bold text-sm text-gray-800">{pipeline.name}</div>
-                  <div className="text-xs text-gray-500">{pipeline.stages.length} etapas</div>
+                  <div className="font-bold text-sm text-nexus-dark">{pipeline.name}</div>
+                  <div className="text-xs text-nexus-warmGray">{pipeline.stages.length} etapas</div>
                 </div>
                 {selectedPipelineId === pipeline.id && <Check className="w-4 h-4 text-nexus-royal" />}
               </label>
@@ -82,16 +82,16 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+        <div className="p-4 border-t border-nexus-sandLight bg-nexus-offWhite flex justify-end gap-3">
           <button 
             onClick={onClose}
-            className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-200 rounded transition-colors"
+            className="px-4 py-2 text-sm font-bold text-nexus-charcoal hover:bg-nexus-sandLight rounded transition-colors"
           >
             Cancelar
           </button>
           <button 
             onClick={handleSubmit}
-            className="px-6 py-2 bg-nexus-royal text-white text-sm font-bold rounded shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="px-6 py-2 bg-nexus-royal text-white text-sm font-bold rounded shadow-sm hover:bg-nexus-crimsonLight transition-colors flex items-center gap-2"
           >
             <Kanban className="w-4 h-4" />
             Criar Negócio

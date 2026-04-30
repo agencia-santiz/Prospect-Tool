@@ -490,25 +490,25 @@ const App: React.FC = () => {
 
   const renderExploreView = () => (
       <div className="space-y-6">
-          <div className="bg-white rounded border border-gray-200 shadow-sm p-5">
+          <div className="bg-nexus-surface rounded border border-nexus-sand shadow-subtle p-5">
               <div className="flex flex-col md:flex-row gap-5 items-end">
                    <div className="flex-[2] w-full relative group" ref={cityInputRef}>
-                        <label className="block text-xs font-bold text-nexus-dark mb-2">Localização <span className="text-red-500">*</span></label>
+                        <label className="block text-xs font-bold text-nexus-dark mb-2">Localização <span className="text-nexus-royal">*</span></label>
                         <div className="relative">
-                            <MapPin className={`absolute left-3 top-3 h-4 w-4 ${validCitySelected ? 'text-nexus-royal' : 'text-gray-400'}`} />
+                            <MapPin className={`absolute left-3 top-3 h-4 w-4 ${validCitySelected ? 'text-nexus-royal' : 'text-nexus-warmGray'}`} />
                             <input 
                                 type="text"
                                 placeholder={t.search_city_placeholder}
-                                className={`w-full h-11 pl-10 pr-4 bg-white border rounded text-sm outline-none focus:ring-2 focus:ring-nexus-royal/20 transition-all ${!validCitySelected && searchParams.city.length > 0 ? 'border-red-300' : 'border-gray-300 focus:border-nexus-royal'}`}
+                                className={`w-full h-11 pl-10 pr-4 bg-nexus-surface border rounded text-sm outline-none focus:ring-2 focus:ring-nexus-royal/20 transition-all ${!validCitySelected && searchParams.city.length > 0 ? 'border-nexus-royal/50' : 'border-nexus-sand focus:border-nexus-royal'}`}
                                 value={searchParams.city}
                                 onChange={handleCityInputChange}
                                 onFocus={() => { if(searchParams.city.length > 0) setShowCitySuggestions(true); }}
                             />
                         </div>
                          {showCitySuggestions && filteredCities.length > 0 && (
-                              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-xl max-h-64 overflow-y-auto z-[100]">
+                              <div className="absolute top-full left-0 right-0 mt-1 bg-nexus-surface border border-nexus-sand rounded-md shadow-float max-h-64 overflow-y-auto z-[100]">
                                 {filteredCities.map((city) => (
-                                  <button key={city.value} onClick={() => selectCity(city.value)} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 border-b border-gray-50 last:border-0">
+                                  <button key={city.value} onClick={() => selectCity(city.value)} className="w-full text-left px-4 py-3 text-sm text-nexus-charcoal hover:bg-nexus-accent border-b border-nexus-sandLight last:border-0">
                                     {city.label}
                                   </button>
                                 ))}
@@ -517,13 +517,13 @@ const App: React.FC = () => {
                    </div>
 
                    <div className="flex-[2] w-full">
-                        <label className="block text-xs font-bold text-nexus-dark mb-2">Segmento / Indústria <span className="text-red-500">*</span></label>
+                        <label className="block text-xs font-bold text-nexus-dark mb-2">Segmento / Indústria <span className="text-nexus-royal">*</span></label>
                         <div className="relative">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-nexus-warmGray" />
                             <input 
                                 type="text"
                                 placeholder={t.search_segment_placeholder}
-                                className="w-full h-11 pl-10 pr-4 bg-white border border-gray-300 rounded text-sm outline-none focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all"
+                                className="w-full h-11 pl-10 pr-4 bg-nexus-surface border border-nexus-sand rounded text-sm outline-none focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all"
                                 value={searchParams.segment}
                                 onChange={(e) => setSearchParams(prev => ({ ...prev, segment: e.target.value }))}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
@@ -535,13 +535,13 @@ const App: React.FC = () => {
                         <label className="block text-xs font-bold text-nexus-dark mb-2">Qtd</label>
                         <div className="relative">
                             {/* Replaced Hash with Search for now or just generic icon */}
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-nexus-warmGray" />
                             <input 
                                 type="number"
                                 min="1"
                                 max="50"
                                 placeholder="9"
-                                className="w-full h-11 pl-9 pr-2 bg-white border border-gray-300 rounded text-sm outline-none focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all"
+                                className="w-full h-11 pl-9 pr-2 bg-nexus-surface border border-nexus-sand rounded text-sm outline-none focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all"
                                 value={quantityInput}
                                 onChange={(e) => setQuantityInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
@@ -552,7 +552,7 @@ const App: React.FC = () => {
                    <button 
                       onClick={handleSearch}
                       disabled={loading || isLoadingMore || !validCitySelected || !searchParams.segment}
-                      className="h-11 px-8 bg-nexus-royal text-white font-bold text-sm rounded shadow-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+                      className="h-11 px-8 bg-nexus-royal text-white font-bold text-sm rounded shadow-sm hover:bg-nexus-crimsonLight transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
                    >
                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t.search_btn}
                    </button>
@@ -565,12 +565,12 @@ const App: React.FC = () => {
 
           {hasSearched && !loading && (
               <div className="animate-fadeIn space-y-4">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-2 border-b border-gray-200">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-2 border-b border-nexus-sand">
                       <div className="flex items-center gap-2">
                           <h2 className="text-lg font-bold text-nexus-dark">
                               {activeListId ? savedLists.find(l => l.id === activeListId)?.name : 'Empresas'}
                           </h2>
-                          <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold">
+                          <span className="bg-nexus-sandLight text-nexus-charcoal px-2 py-0.5 rounded text-xs font-bold">
                               {filteredLeads.length}
                           </span>
                       </div>
@@ -582,36 +582,36 @@ const App: React.FC = () => {
                                    placeholder={t.search_local_placeholder}
                                    value={localSearchTerm}
                                    onChange={(e) => setLocalSearchTerm(e.target.value)}
-                                   className="h-9 pl-3 pr-8 text-xs border border-gray-300 rounded bg-white w-56 focus:border-nexus-royal outline-none focus:ring-1 focus:ring-nexus-royal/20"
+                                   className="h-9 pl-3 pr-8 text-xs border border-nexus-sand rounded bg-nexus-surface w-56 focus:border-nexus-royal outline-none focus:ring-1 focus:ring-nexus-royal/20"
                                />
-                               <Filter className="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                               <Filter className="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-nexus-warmGray" />
                            </div>
 
-                           <div className="flex bg-white p-0.5 rounded border border-gray-300">
+                           <div className="flex bg-nexus-surface p-0.5 rounded border border-nexus-sand">
                                <button 
                                   onClick={() => setViewMode('list')} 
-                                  className={`p-1.5 rounded-sm transition-all ${viewMode === 'list' ? 'bg-gray-100 text-nexus-royal font-bold' : 'text-gray-400 hover:text-gray-600'}`}
+                                  className={`p-1.5 rounded-sm transition-all ${viewMode === 'list' ? 'bg-nexus-sandLight text-nexus-royal font-bold' : 'text-nexus-warmGray hover:text-nexus-charcoal'}`}
                                   title={t.view_list}
                                >
                                    <List className="w-4 h-4" />
                                </button>
-                               <div className="w-px bg-gray-200 my-1"></div>
+                               <div className="w-px bg-nexus-sand my-1"></div>
                                <button 
                                   onClick={() => setViewMode('grid')} 
-                                  className={`p-1.5 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-gray-100 text-nexus-royal font-bold' : 'text-gray-400 hover:text-gray-600'}`}
+                                  className={`p-1.5 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-nexus-sandLight text-nexus-royal font-bold' : 'text-nexus-warmGray hover:text-nexus-charcoal'}`}
                                   title={t.view_grid}
                                >
                                    <LayoutGrid className="w-4 h-4" />
                                </button>
                            </div>
 
-                           <button onClick={handleExport} className="h-9 px-3 border border-gray-300 font-bold text-xs rounded hover:bg-gray-50 flex items-center gap-2 bg-white text-gray-700">
+                           <button onClick={handleExport} className="h-9 px-3 border border-nexus-sand font-bold text-xs rounded hover:bg-nexus-sandLight flex items-center gap-2 bg-nexus-surface text-nexus-charcoal">
                                <Download className="w-3.5 h-3.5" />
                                <span className="hidden sm:inline">{t.export_btn}</span>
                            </button>
 
                            {!activeListId && (
-                               <button onClick={() => setIsSaveListModalOpen(true)} className="h-9 px-3 bg-nexus-primary text-white border border-transparent font-bold text-xs rounded shadow-sm hover:bg-orange-600 flex items-center gap-2">
+                               <button onClick={() => setIsSaveListModalOpen(true)} className="h-9 px-3 bg-nexus-royal text-white border border-nexus-royal font-bold text-xs rounded shadow-sm hover:bg-nexus-crimsonLight flex items-center gap-2">
                                    <Save className="w-3.5 h-3.5" />
                                    <span className="hidden sm:inline">{t.save_list}</span>
                                </button>
@@ -660,15 +660,15 @@ const App: React.FC = () => {
                            ) : hasMoreResults ? (
                                <button 
                                    onClick={handleLoadMore}
-                                   className="group relative flex items-center gap-2 px-8 py-3 bg-white border font-bold rounded-full shadow-sm hover:shadow-md transition-all border-nexus-royal/30 text-nexus-royal hover:bg-blue-50"
+                                   className="group relative flex items-center gap-2 px-8 py-3 bg-nexus-surface border font-bold rounded-full shadow-sm hover:shadow-card-hover transition-all border-nexus-royal/30 text-nexus-royal hover:bg-nexus-accent"
                                >
                                     <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                                     Carregar Mais Resultados
                                </button>
                            ) : (
                                <div className="flex flex-col items-center gap-2 animate-fadeIn mt-4">
-                                   <div className="w-12 h-1 bg-gray-200 rounded-full mb-2"></div>
-                                   <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-gray-500 text-xs font-bold uppercase tracking-widest border border-gray-200">
+                                   <div className="w-12 h-1 bg-nexus-sand rounded-full mb-2"></div>
+                                   <div className="flex items-center gap-2 px-4 py-2 bg-nexus-sandLight rounded-full text-nexus-warmGray text-xs font-bold uppercase tracking-widest border border-nexus-sand">
                                        <PinOff className="w-3.5 h-3.5" /> Fim dos Resultados
                                    </div>
                                </div>
@@ -679,20 +679,20 @@ const App: React.FC = () => {
           )}
           
           {!hasSearched && !loading && (
-              <div className="flex flex-col items-center justify-center py-24 bg-white border border-gray-200 rounded shadow-sm">
-                  <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center justify-center py-24 bg-nexus-surface border border-nexus-sand rounded shadow-subtle">
+                  <div className="w-20 h-20 bg-nexus-accent rounded-full flex items-center justify-center mb-6">
                       <Globe className="w-10 h-10 text-nexus-royal" />
                   </div>
                   <h3 className="text-xl font-bold text-nexus-dark mb-2">Comece sua Prospecção Global</h3>
-                  <p className="text-gray-500 max-w-md text-center mb-8 leading-relaxed">
+                  <p className="text-nexus-warmGray max-w-md text-center mb-8 leading-relaxed">
                       Utilize os filtros acima para encontrar empresas reais validadas via Google Maps. Dados de contato, status e horários em tempo real.
                   </p>
                   
                   <div className="flex gap-4">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+                    <div className="flex items-center gap-2 text-xs text-nexus-charcoal bg-nexus-sandLight px-3 py-1.5 rounded border border-nexus-sand">
                         <Check className="w-3 h-3 text-green-500" /> Google Maps
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+                    <div className="flex items-center gap-2 text-xs text-nexus-charcoal bg-nexus-sandLight px-3 py-1.5 rounded border border-nexus-sand">
                         <Check className="w-3 h-3 text-green-500" /> Horários
                     </div>
                   </div>
@@ -703,31 +703,31 @@ const App: React.FC = () => {
 
   const renderListsView = () => (
       <div className="space-y-6 animate-fadeIn">
-          <div className="flex justify-between items-center bg-white p-5 rounded border border-gray-200 shadow-sm">
+          <div className="flex justify-between items-center bg-nexus-surface p-5 rounded border border-nexus-sand shadow-subtle">
              <div>
                 <h2 className="text-xl font-bold text-nexus-dark">Minhas Listas</h2>
-                <p className="text-sm text-gray-500 mt-1">Gerencie seus grupos de prospecção salvos.</p>
+                <p className="text-sm text-nexus-warmGray mt-1">Gerencie seus grupos de prospecção salvos.</p>
              </div>
-             <button onClick={() => setActiveModuleId('explore')} className="flex items-center gap-2 text-sm font-bold text-white bg-nexus-royal px-5 py-2.5 rounded shadow-sm hover:bg-blue-700 transition-all">
+             <button onClick={() => setActiveModuleId('explore')} className="flex items-center gap-2 text-sm font-bold text-white bg-nexus-royal px-5 py-2.5 rounded shadow-sm hover:bg-nexus-crimsonLight transition-all">
                  <Plus className="w-4 h-4" /> Criar Nova Lista
              </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {savedLists.map(list => (
-                  <div key={list.id} onClick={() => handleOpenList(list)} className="bg-white p-6 rounded border border-gray-200 shadow-sm hover:shadow-md hover:border-nexus-royal cursor-pointer transition-all group relative">
+                  <div key={list.id} onClick={() => handleOpenList(list)} className="bg-nexus-surface p-6 rounded border border-nexus-sand shadow-subtle hover:shadow-card-hover hover:border-nexus-royal cursor-pointer transition-all group relative">
                       <div className="flex justify-between items-start mb-4">
-                          <div className="p-3 bg-blue-50 rounded text-nexus-royal group-hover:bg-nexus-royal group-hover:text-white transition-colors">
+                          <div className="p-3 bg-nexus-accent rounded text-nexus-royal group-hover:bg-nexus-royal group-hover:text-white transition-colors">
                               <List className="w-6 h-6" />
                           </div>
-                          <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          <MoreHorizontal className="w-4 h-4 text-nexus-warmGray hover:text-nexus-charcoal" />
                       </div>
                       <h3 className="font-bold text-nexus-dark text-lg mb-1 truncate">{list.name}</h3>
-                      <p className="text-xs text-gray-500 mb-4">{list.leads.length} empresas • Criado em {list.createdAt}</p>
-                      <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
-                           <span className="text-[10px] uppercase font-bold tracking-wider bg-gray-100 px-2 py-1 rounded text-gray-600 truncate">
+                      <p className="text-xs text-nexus-warmGray mb-4">{list.leads.length} empresas • Criado em {list.createdAt}</p>
+                      <div className="flex items-center gap-2 border-t border-nexus-sandLight pt-3">
+                           <span className="text-[10px] uppercase font-bold tracking-wider bg-nexus-sandLight px-2 py-1 rounded text-nexus-charcoal truncate">
                                {list.params.city.split('-')[0]}
                            </span>
-                           <span className="text-[10px] uppercase font-bold tracking-wider bg-gray-100 px-2 py-1 rounded text-gray-600 truncate">
+                           <span className="text-[10px] uppercase font-bold tracking-wider bg-nexus-sandLight px-2 py-1 rounded text-nexus-charcoal truncate">
                                {list.params.segment}
                            </span>
                       </div>
@@ -742,12 +742,12 @@ const App: React.FC = () => {
          <div className="flex justify-between items-center mb-6">
              <div>
                  <h2 className="text-xl font-bold text-nexus-dark">{pipelines[0].name}</h2>
-                 <p className="text-sm text-gray-500">Arraste e solte para mover os negócios.</p>
+                 <p className="text-sm text-nexus-warmGray">Arraste e solte para mover os negócios.</p>
              </div>
              <div className="flex items-center gap-3">
                  <button 
                     onClick={() => { setActiveModuleId('explore'); }}
-                    className="bg-nexus-royal text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 flex items-center gap-2"
+                    className="bg-nexus-royal text-white px-4 py-2 rounded text-sm font-bold hover:bg-nexus-crimsonLight flex items-center gap-2"
                  >
                      <Plus className="w-4 h-4" /> Adicionar Negócio
                  </button>
@@ -770,20 +770,20 @@ const App: React.FC = () => {
   );
 
   const renderContactsView = () => (
-      <div className="bg-white border border-gray-200 rounded shadow-sm overflow-hidden animate-fadeIn">
-          <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+      <div className="bg-nexus-surface border border-nexus-sand rounded shadow-subtle overflow-hidden animate-fadeIn">
+          <div className="p-5 border-b border-nexus-sand flex justify-between items-center bg-nexus-offWhite">
                <div>
                    <h2 className="text-lg font-bold text-nexus-dark">Todos os Contatos</h2>
-                   <p className="text-xs text-gray-500">Gerencie sua base de relacionamentos.</p>
+                   <p className="text-xs text-nexus-warmGray">Gerencie sua base de relacionamentos.</p>
                </div>
-               <div className="text-xs font-bold text-gray-500 bg-white px-3 py-1 border rounded shadow-sm">
+               <div className="text-xs font-bold text-nexus-warmGray bg-nexus-surface px-3 py-1 border border-nexus-sand rounded shadow-subtle">
                    Total: {contacts.length}
                </div>
           </div>
           <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                   <thead>
-                      <tr className="bg-white border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                      <tr className="bg-nexus-surface border-b border-nexus-sand text-xs font-bold text-nexus-warmGray uppercase tracking-wide">
                           <th className="px-5 py-3 w-10"><input type="checkbox" className="rounded" /></th>
                           <th className="px-5 py-3">Empresa / Nome</th>
                           <th className="px-5 py-3">Email / Telefone</th>
@@ -795,7 +795,7 @@ const App: React.FC = () => {
                       {contacts.map(contact => (
                               <tr 
                                 key={contact.id} 
-                                className="hover:bg-blue-50/50 transition-colors group"
+                                className="hover:bg-nexus-accent/50 transition-colors group"
                               >
                                   <td className="px-5 py-3"><input type="checkbox" className="rounded" /></td>
                                   <td className="px-5 py-3">
@@ -805,7 +805,7 @@ const App: React.FC = () => {
                                           </div>
                                           <div className="truncate max-w-[200px]">
                                               <div className="font-bold text-sm text-nexus-dark">{contact.nome_fantasia}</div>
-                                              <div className="text-xs text-gray-400">{contact.razão_social}</div>
+                                              <div className="text-xs text-nexus-warmGray">{contact.razão_social}</div>
                                           </div>
                                       </div>
                                   </td>
@@ -813,24 +813,24 @@ const App: React.FC = () => {
                                       <div className="flex flex-col gap-1">
                                           {contact.telefone ? (
                                               <div className="flex items-center gap-2 text-xs text-gray-700">
-                                                  <Phone className="w-3 h-3 text-gray-400" /> {contact.telefone}
+                                                  <Phone className="w-3 h-3 text-nexus-warmGray" /> {contact.telefone}
                                               </div>
-                                          ) : <span className="text-xs text-gray-400">--</span>}
+                                          ) : <span className="text-xs text-nexus-warmGray">--</span>}
                                           {contact.website ? (
                                               <div className="flex items-center gap-2 text-xs text-nexus-royal cursor-pointer hover:underline truncate max-w-[150px]">
-                                                  <Globe2 className="w-3 h-3 text-gray-400" /> {contact.website}
+                                                  <Globe2 className="w-3 h-3 text-nexus-warmGray" /> {contact.website}
                                               </div>
-                                          ) : <span className="text-xs text-gray-400">--</span>}
+                                          ) : <span className="text-xs text-nexus-warmGray">--</span>}
                                       </div>
                                   </td>
                                   <td className="px-5 py-3">
                                       <div className="text-xs text-gray-700 line-clamp-1" title={contact.endereco || contact.cidade}>
                                           {contact.endereco || contact.cidade}
                                       </div>
-                                      <div className="text-[10px] text-gray-400">{contact.uf}</div>
+                                      <div className="text-[10px] text-nexus-warmGray">{contact.uf}</div>
                                   </td>
                                   <td className="px-5 py-3 text-right">
-                                      <button className="text-gray-400 hover:text-nexus-royal p-1">
+                                      <button className="text-nexus-warmGray hover:text-nexus-royal p-1">
                                           <MoreHorizontal className="w-4 h-4" />
                                       </button>
                                   </td>
@@ -839,7 +839,7 @@ const App: React.FC = () => {
                       )}
                       {contacts.length === 0 && (
                           <tr>
-                              <td colSpan={6} className="text-center py-12 text-gray-400 text-sm">
+                              <td colSpan={6} className="text-center py-12 text-nexus-warmGray text-sm">
                                   Nenhum contato salvo ainda. Salve empresas para vê-las aqui.
                               </td>
                           </tr>
@@ -866,11 +866,11 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-nexus-bg font-sans flex text-nexus-dark overflow-hidden">
       
       <aside 
-         className={`bg-nexus-sidebar text-white flex flex-col transition-all duration-300 ease-in-out z-50 shadow-xl border-r border-gray-800 ${isSidebarExpanded ? 'w-64' : 'w-16'}`}
+         className={`bg-nexus-sidebar text-white flex flex-col transition-all duration-300 ease-in-out z-50 shadow-float border-r border-nexus-dark/30 ${isSidebarExpanded ? 'w-64' : 'w-16'}`}
          onMouseEnter={() => !isSidebarPinned && setIsSidebarHovered(true)}
          onMouseLeave={() => !isSidebarPinned && setIsSidebarHovered(false)}
       >
-          <div className="h-14 flex items-center px-4 border-b border-white/10 shrink-0 bg-nexus-sidebarHover">
+          <div className="h-14 flex items-center px-4 border-b border-white/10 shrink-0 bg-nexus-sidebar">
                <div className="w-8 h-8 bg-nexus-royal rounded flex items-center justify-center shrink-0 shadow-sm">
                     <Hexagon size={18} fill="currentColor" className="text-white" />
                </div>
@@ -883,7 +883,7 @@ const App: React.FC = () => {
               {NAV_STRUCTURE.map((group) => (
                   <div key={group.title}>
                       {isSidebarExpanded && (
-                          <div className="px-5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider animate-fadeIn">
+                          <div className="px-5 mb-2 text-[10px] font-bold text-nexus-sand uppercase tracking-wider animate-fadeIn">
                               {group.title}
                           </div>
                       )}
@@ -897,10 +897,10 @@ const App: React.FC = () => {
                                  className={`w-full flex items-center h-9 px-3 rounded transition-all duration-200 group relative ${
                                      activeModuleId === item.id 
                                      ? 'bg-nexus-royal text-white shadow-md font-medium' 
-                                     : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                                     : 'text-nexus-sand hover:bg-white/10 hover:text-white'
                                  }`}
                               >
-                                  <item.icon className={`w-4 h-4 shrink-0 transition-colors ${activeModuleId === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                                  <item.icon className={`w-4 h-4 shrink-0 transition-colors ${activeModuleId === item.id ? 'text-white' : 'text-nexus-sand group-hover:text-white'}`} />
                                   <span className={`ml-3 text-sm whitespace-nowrap transition-all duration-300 ${isSidebarExpanded ? 'opacity-100' : 'opacity-0 absolute left-10 pointer-events-none'}`}>
                                       {item.label}
                                   </span>
@@ -920,7 +920,7 @@ const App: React.FC = () => {
           <div className="p-4 border-t border-white/10 shrink-0">
                <button 
                   onClick={() => { setIsSidebarPinned(!isSidebarPinned); setIsSidebarHovered(!isSidebarPinned); }}
-                  className="w-full flex items-center justify-center h-8 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                  className="w-full flex items-center justify-center h-8 rounded hover:bg-white/10 text-nexus-sand hover:text-white transition-colors"
                   title={isSidebarPinned ? "Fixar Menu" : "Desafixar Menu"}
                >
                    {isSidebarPinned ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
@@ -930,26 +930,26 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
            
-           <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-40 shadow-sm">
+           <header className="h-14 bg-nexus-surface border-b border-nexus-sand flex items-center justify-between px-6 shrink-0 z-40 shadow-subtle">
                 <div className="flex items-center w-full max-w-xl">
                     <div className="relative w-full">
-                        <Search className="absolute left-3 top-2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-2 w-4 h-4 text-nexus-warmGray" />
                         <input 
                             type="text" 
                             placeholder="Pesquisar no Bloom Leads (Ctrl+K)" 
-                            className="w-full h-8 pl-9 pr-4 bg-gray-100 border border-transparent rounded text-sm focus:bg-white focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all outline-none placeholder-gray-500 text-gray-700"
+                            className="w-full h-8 pl-9 pr-4 bg-nexus-sandLight border border-transparent rounded text-sm focus:bg-nexus-surface focus:border-nexus-royal focus:ring-2 focus:ring-nexus-royal/20 transition-all outline-none placeholder-nexus-warmGray text-nexus-charcoal"
                         />
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4 ml-6">
-                    <button className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full relative transition-colors">
+                    <button className="p-1.5 text-nexus-warmGray hover:bg-nexus-sandLight rounded-full relative transition-colors">
                         <Bell className="w-5 h-5" />
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                        <span className="absolute top-1 right-1 w-2 h-2 bg-nexus-royal rounded-full border border-nexus-surface"></span>
                     </button>
                     
                     <div className="relative group cursor-pointer">
-                        <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 shadow-sm hover:ring-2 ring-offset-2 ring-nexus-royal transition-all">
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-nexus-sand shadow-sm hover:ring-2 ring-offset-2 ring-nexus-royal transition-all">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
                             ) : (
@@ -958,10 +958,10 @@ const App: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 p-2 hidden group-hover:block animate-fadeIn z-50">
-                            <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-nexus-surface rounded-lg shadow-float border border-nexus-sand p-2 hidden group-hover:block animate-fadeIn z-50">
+                            <div className="px-3 py-2 border-b border-nexus-sandLight mb-2">
                                 <p className="text-sm font-bold text-nexus-dark truncate">{user?.name}</p>
-                                <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                                <p className="text-[10px] text-nexus-warmGray truncate">{user?.email}</p>
                                 <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-nexus-royal/10 text-nexus-royal">
                                     {user?.plan} PLAN
                                 </span>
@@ -974,21 +974,21 @@ const App: React.FC = () => {
                 </div>
            </header>
 
-           <div className="h-16 border-b border-gray-200 bg-white px-8 flex items-center justify-between shrink-0">
+           <div className="h-16 border-b border-nexus-sand bg-nexus-surface px-8 flex items-center justify-between shrink-0">
                 <div className="flex flex-col justify-center">
                     <div className="flex items-center gap-2 text-xs mb-0.5">
-                        <span className="font-semibold text-gray-500 uppercase tracking-wide">
+                        <span className="font-semibold text-nexus-warmGray uppercase tracking-wide">
                             {NAV_STRUCTURE.find(g => g.items.some(i => i.id === activeModuleId))?.title}
                         </span>
-                        <span className="text-gray-300">/</span>
+                        <span className="text-nexus-sand">/</span>
                     </div>
-                    <h1 className="font-bold text-gray-900 text-xl tracking-tight">
+                    <h1 className="font-bold text-nexus-dark text-xl tracking-tight">
                         {NAV_STRUCTURE.flatMap(g => g.items).find(i => i.id === activeModuleId)?.label}
                     </h1>
                 </div>
                 <div className="flex items-center gap-3">
                      {activeModuleId === 'explore' && (
-                         <button className="flex items-center gap-1.5 text-xs font-bold text-nexus-royal bg-white border border-nexus-royal/30 px-4 py-2 rounded shadow-sm hover:bg-blue-50 transition-colors">
+                         <button className="flex items-center gap-1.5 text-xs font-bold text-nexus-royal bg-nexus-surface border border-nexus-royal/30 px-4 py-2 rounded shadow-subtle hover:bg-nexus-accent transition-colors">
                              <Filter className="w-3.5 h-3.5" /> Filtros Salvos
                          </button>
                      )}
@@ -1003,10 +1003,10 @@ const App: React.FC = () => {
                     {activeModuleId === 'contacts' && renderContactsView()} 
                     {!['explore', 'lists', 'contacts', 'pipeline'].includes(activeModuleId) && (
                         <div className="flex flex-col items-center justify-center h-96 text-gray-400">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                <User className="w-8 h-8 text-gray-300" />
+                            <div className="w-16 h-16 bg-nexus-sandLight rounded-full flex items-center justify-center mb-4">
+                                <User className="w-8 h-8 text-nexus-sand" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-600">Módulo em Desenvolvimento</h3>
+                            <h3 className="text-lg font-bold text-nexus-charcoal">Módulo em Desenvolvimento</h3>
                             <p>Esta funcionalidade estará disponível na próxima atualização.</p>
                         </div>
                     )}
@@ -1015,7 +1015,7 @@ const App: React.FC = () => {
       </div>
 
       {notification && (
-          <div className={`fixed bottom-6 right-6 z-[2000] px-6 py-4 rounded shadow-2xl animate-slideIn flex items-center gap-3 border-l-4 max-w-md ${notification.type === 'success' ? 'bg-nexus-sidebar text-white border-nexus-royal' : 'bg-red-50 text-red-800 border-red-500'}`}>
+          <div className={`fixed bottom-6 right-6 z-[2000] px-6 py-4 rounded shadow-float animate-slideIn flex items-center gap-3 border-l-4 max-w-md ${notification.type === 'success' ? 'bg-nexus-sidebar text-white border-nexus-royal' : 'bg-nexus-accent text-nexus-crimsonDark border-nexus-royal'}`}>
              {notification.type === 'success' ? <Check className="w-5 h-5 text-green-400 shrink-0" /> : <AlertOctagon className="w-5 h-5 shrink-0" />}
              <div>
                <p className="font-bold text-sm mb-0.5">{notification.type === 'success' ? 'Sucesso!' : 'Atenção'}</p>
@@ -1029,13 +1029,13 @@ const App: React.FC = () => {
 
       {isSaveListModalOpen && (
           <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-nexus-sidebar/50 backdrop-blur-sm p-4 animate-fadeIn">
-             <div className="bg-white rounded p-6 w-full max-w-md shadow-2xl border border-gray-100">
+             <div className="bg-nexus-surface rounded p-6 w-full max-w-md shadow-float border border-nexus-sand">
                  <h3 className="font-bold text-lg mb-1 text-gray-900">Salvar Lista</h3>
-                 <p className="text-xs text-gray-500 mb-4">Crie um novo grupo para organizar seus leads.</p>
-                 <input type="text" value={listNameInput} onChange={(e) => setListNameInput(e.target.value)} className="w-full border border-gray-300 p-2.5 rounded mb-4 text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none" placeholder="Nome da lista (Ex: Padarias SP)" autoFocus />
+                 <p className="text-xs text-nexus-warmGray mb-4">Crie um novo grupo para organizar seus leads.</p>
+                 <input type="text" value={listNameInput} onChange={(e) => setListNameInput(e.target.value)} className="w-full border border-nexus-sand p-2.5 rounded mb-4 text-sm focus:border-nexus-royal focus:ring-1 focus:ring-nexus-royal outline-none" placeholder="Nome da lista (Ex: Padarias SP)" autoFocus />
                  <div className="flex justify-end gap-2">
-                     <button onClick={() => setIsSaveListModalOpen(false)} className="px-4 py-2 text-gray-600 font-bold text-xs hover:bg-gray-100 rounded transition-colors">Cancelar</button>
-                     <button onClick={confirmSaveBatchList} className="px-4 py-2 bg-nexus-primary text-white font-bold text-xs rounded hover:bg-orange-600 transition-colors shadow-sm">Salvar Lista</button>
+                     <button onClick={() => setIsSaveListModalOpen(false)} className="px-4 py-2 text-nexus-charcoal font-bold text-xs hover:bg-nexus-sandLight rounded transition-colors">Cancelar</button>
+                     <button onClick={confirmSaveBatchList} className="px-4 py-2 bg-nexus-royal text-white font-bold text-xs rounded hover:bg-nexus-crimsonLight transition-colors shadow-sm">Salvar Lista</button>
                  </div>
              </div>
           </div>

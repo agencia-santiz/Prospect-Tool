@@ -1,0 +1,189 @@
+query GetCurrentUserByAuthUid($authUid: String!) @auth(level: USER) {
+  users(where: { authUid: { eq: $authUid } }, limit: 1) {
+    id
+    authUid
+    email
+    name
+    avatarUrl
+    authProvider
+    plan
+    isActive
+    usageLimit
+    usageCount
+    createdAt
+    updatedAt
+    lastLoginAt
+  }
+}
+
+query GetWorkspaceBySlug($slug: String!) @auth(level: USER) {
+  workspaces(where: { slug: { eq: $slug } }, limit: 1) {
+    id
+    name
+    slug
+    plan
+    isArchived
+    createdAt
+    updatedAt
+    owner {
+      id
+      name
+      email
+      avatarUrl
+    }
+  }
+}
+
+query ListWorkspaceMembers($workspaceId: UUID!) @auth(level: USER) {
+  workspaceMembers(where: { workspaceId: { eq: $workspaceId } }) {
+    workspace {
+      id
+      name
+      slug
+    }
+    user {
+      id
+      name
+      email
+      avatarUrl
+    }
+    role
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+query ListSavedLists($workspaceId: UUID!) @auth(level: USER) {
+  savedLists(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    name
+    createdAt
+    updatedAt
+    createdByUser {
+      id
+      name
+      email
+    }
+    search {
+      id
+      city
+      segmentRaw
+      status
+    }
+  }
+}
+
+query ListPipelineOverview($workspaceId: UUID!) @auth(level: USER) {
+  pipelines(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    name
+    isDefault
+    createdAt
+    updatedAt
+  }
+}
+
+query ListPipelineStages($pipelineId: UUID!) @auth(level: USER) {
+  pipelineStages(where: { pipelineId: { eq: $pipelineId } }) {
+    id
+    name
+    sortOrder
+    color
+    createdAt
+    updatedAt
+  }
+}
+
+query ListContactsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
+  contacts(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    name
+    title
+    email
+    phone
+    whatsappStatus
+    preferredChannel
+    createdAt
+    updatedAt
+    company {
+      id
+      legalName
+      tradeName
+      city
+      region
+    }
+  }
+}
+
+query ListDealsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
+  deals(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    title
+    value
+    priority
+    nextStep
+    notes
+    createdAt
+    updatedAt
+    company {
+      id
+      legalName
+      tradeName
+      city
+      region
+    }
+    contact {
+      id
+      name
+      email
+      phone
+    }
+    pipeline {
+      id
+      name
+      isDefault
+    }
+    stage {
+      id
+      name
+      sortOrder
+      color
+    }
+  }
+}
+
+mutation BootstrapWorkspace(
+  $email: String!
+  $name: String!
+  $workspaceName: String!
+  $workspaceSlug: String!
+) @auth(level: USER) @transaction {
+  user_insert(
+    data: {
+      id_expr: "uuidV4()"
+      authUid_expr: "auth.uid"
+      email: $email
+      name: $name
+      authProvider: "firebase"
+      lastLoginAt_expr: "request.time"
+    }
+  )
+  workspace_insert(
+    data: {
+      ownerId_expr: "response.user_insert.id"
+      name: $workspaceName
+      slug: $workspaceSlug
+      plan: "free"
+      isArchived: false
+    }
+  )
+  workspaceMember_insert(
+    data: {
+      workspaceId_expr: "response.workspace_insert.id"
+      userId_expr: "response.user_insert.id"
+      role: "owner"
+      status: "active"
+    }
+  )
+}

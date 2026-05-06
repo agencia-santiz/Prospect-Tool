@@ -1,0 +1,22 @@
+import './cardConfigStore.test.mjs';
+import './auth.test.mjs';
+import './domainContracts.test.mjs';
+import './secretsCentralization.test.mjs';
+import './backend.test.mjs';
+import './postgresSchema.test.mjs';
+import './companyNormalizer.test.mjs';
+import './companyDeduper.test.mjs';
+import './companyIdentity.test.mjs';
+import './cnpjCnaeService.test.mjs';
+import './locationResolver.test.mjs';
+import './segmentResolver.test.mjs';
+import './googleMapsService.test.mjs';
+import './searchOrchestrator.test.mjs';
+import './segmentDatabase.test.mjs';
+import './whatsappLink.test.mjs';
+import './openDataService.test.mjs';
+import './app-shell.test.mjs';
+import './design-system.test.mjs';
+import './modal-shell.test.mjs';
+
+console.log('All document and integration checks passed.');

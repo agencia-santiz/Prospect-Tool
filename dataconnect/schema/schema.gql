@@ -1,0 +1,220 @@
+type User @table(name: "users") {
+  id: UUID! @default(expr: "uuidV4()")
+  authUid: String! @default(expr: "auth.uid") @unique
+  email: String! @unique
+  name: String!
+  avatarUrl: String
+  authProvider: String! @default(value: "email")
+  plan: String! @default(value: "free")
+  isActive: Boolean! @default(value: true)
+  usageLimit: Int! @default(value: 100)
+  usageCount: Int! @default(value: 0)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  lastLoginAt: Timestamp
+}
+
+type Workspace @table(name: "workspaces") {
+  id: UUID! @default(expr: "uuidV4()")
+  owner: User!
+  name: String!
+  slug: String! @unique
+  plan: String! @default(value: "free")
+  isArchived: Boolean! @default(value: false)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type WorkspaceMember @table(name: "workspace_members", key: ["workspace", "user"]) {
+  workspace: Workspace!
+  user: User!
+  role: String! @default(value: "member")
+  status: String! @default(value: "active")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Search @table(name: "searches") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  createdByUser: User
+  city: String!
+  region: String
+  cityCode: String
+  segmentRaw: String!
+  segmentCanonicalId: String
+  sourcePriority: [String]! @default(sql: "ARRAY[]::text[]")
+  status: String! @default(value: "queued")
+  requestedQuantity: Int! @default(value: 0)
+  resultCount: Int! @default(value: 0)
+  filters: Any! @default(value: {})
+  startedAt: Timestamp
+  completedAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Company @table(name: "companies") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace
+  sourceId: String
+  placeId: String
+  taxId: String
+  legalName: String!
+  tradeName: String!
+  segment: String!
+  website: String
+  email: String
+  phone: String
+  whatsappStatus: String! @default(value: "none")
+  addressLine1: String
+  addressNeighborhood: String
+  city: String!
+  region: String!
+  country: String! @default(value: "Brasil")
+  postalCode: String
+  latitude: Float
+  longitude: Float
+  score: Float! @default(value: 0)
+  provenance: Any! @default(value: {})
+  rawPayload: Any! @default(value: {})
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type CompanySource @table(name: "company_sources") {
+  id: UUID! @default(expr: "uuidV4()")
+  company: Company!
+  sourceName: String!
+  sourceRecordId: String
+  sourceUrl: String
+  confidence: Float! @default(value: 0)
+  isPrimary: Boolean! @default(value: false)
+  payload: Any! @default(value: {})
+  fetchedAt: Timestamp! @default(expr: "request.time")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Lead @table(name: "leads") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  search: Search
+  company: Company!
+  status: String! @default(value: "new")
+  rank: Int! @default(value: 0)
+  score: Float! @default(value: 0)
+  reason: String
+  source: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type SavedList @table(name: "saved_lists") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  createdByUser: User
+  search: Search
+  name: String!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type SavedListItem @table(name: "saved_list_items", key: ["list", "lead"]) {
+  list: SavedList!
+  lead: Lead!
+  addedAt: Timestamp! @default(expr: "request.time")
+  note: String
+}
+
+type Contact @table(name: "contacts") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  company: Company!
+  lead: Lead
+  name: String
+  title: String
+  email: String
+  phone: String
+  whatsappStatus: String! @default(value: "none")
+  preferredChannel: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Pipeline @table(name: "pipelines") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  name: String!
+  isDefault: Boolean! @default(value: false)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type PipelineStage @table(name: "pipeline_stages") {
+  id: UUID! @default(expr: "uuidV4()")
+  pipeline: Pipeline!
+  name: String!
+  sortOrder: Int!
+  color: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Deal @table(name: "deals") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  company: Company
+  contact: Contact
+  pipeline: Pipeline!
+  stage: PipelineStage!
+  title: String!
+  value: Float
+  priority: String! @default(value: "medium")
+  nextStep: String
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type EnrichmentJob @table(name: "enrichment_jobs") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  company: Company
+  search: Search
+  jobType: String!
+  status: String! @default(value: "queued")
+  attempts: Int! @default(value: 0)
+  scheduledFor: Timestamp
+  startedAt: Timestamp
+  finishedAt: Timestamp
+  payload: Any! @default(value: {})
+  result: Any! @default(value: {})
+  errorMessage: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type UsageEvent @table(name: "usage_events") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  user: User
+  eventType: String!
+  source: String
+  quantity: Int! @default(value: 1)
+  metadata: Any! @default(value: {})
+  occurredAt: Timestamp! @default(expr: "request.time")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type SearchFeedback @table(name: "search_feedback") {
+  id: UUID! @default(expr: "uuidV4()")
+  workspace: Workspace!
+  search: Search
+  company: Company
+  lead: Lead
+  user: User
+  feedbackType: String!
+  note: String
+  metadata: Any! @default(value: {})
+  createdAt: Timestamp! @default(expr: "request.time")
+}

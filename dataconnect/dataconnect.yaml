@@ -1,0 +1,13 @@
+specVersion: "v1"
+serviceId: "bloom-leads-dfd79-service"
+location: "southamerica-east1"
+schemas:
+  - source: "./schema"
+    datasource:
+      postgresql:
+        database: "bloom-leads-dfd79-database"
+        cloudSql:
+          instanceId: "bloom-leads-dfd79-instance"
+          # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
+          # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
+connectorDirs: ["./example"]

@@ -1,5 +1,5 @@
 # Santiz Crimson Design System Skill
-This skill ensures all UI development follows the "Santiz Crimson" design system defined in `DESIGN.md`.
+This skill ensures all UI development follows the "Santiz Crimson" design system defined in `docs/DESIGN.md`.
 
 ## Core Identity
 - **Canvas**: Warm Cream (`#fffefb`)

@@ -137,6 +137,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - O desktop agora faz pull do snapshot remoto via Data Connect e faz flush assíncrono da outbox local para as entidades compartilhadas suportadas.
 - O motor de busca no desktop ficou mais resiliente: falhas isoladas de geocoding ou de uma fonte principal nao derrubam mais a pesquisa inteira, e o fallback Open Data usa headers explicitos para Nominatim e Overpass.
 - O frontend desktop deixou de chamar Open Data diretamente; a fonte aberta passou a ser resolvida pelo backend para evitar erros de rede visiveis no console do usuario.
+- O backend de Open Data agora tenta mais de uma instancia publica do Overpass antes de desistir, para reduzir o teto artificial de resultados quando uma instancia retorna 406 ou esta sobrecarregada.
 - Durante a fase de depuracao do desktop, a janela principal abre o DevTools acoplado à direita por padrao; o comportamento pode ser desligado com `BLOOM_DESKTOP_OPEN_DEVTOOLS=0`.
 - O desktop agora grava logs persistentes em `userData/logs/desktop.log`, com rotacao simples e fallback para stdout quando o filesystem falha.
 - A trilha desktop ganhou smoke de release via `npm run desktop:release:smoke` e um guia curto de operacao/recuperacao.

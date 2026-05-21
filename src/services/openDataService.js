@@ -3,7 +3,11 @@ import { filterLeadsBySegment } from '../utils/segmentLeadMatcher.js';
 import { isWhatsAppLink, normalizeWhatsAppPhone } from '../utils/whatsappLink.js';
 
 const NOMINATIM_ENDPOINT = 'https://nominatim.openstreetmap.org/search';
-const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
 const OPEN_DATA_SOURCE = 'OPEN_DATA';
 const OPEN_DATA_USER_AGENT = 'BloomLeadsDesktop/1.0 (OpenDataFallback)';
 const OPEN_DATA_ACCEPT_LANGUAGE = 'pt-BR,pt;q=0.9,en;q=0.6';
@@ -564,20 +568,37 @@ export const fetchOpenDataLeads = async (
 
   const overpassQuery = buildOverpassQuery(bbox, segment);
   const overpassBody = new URLSearchParams({ data: overpassQuery });
-  const overpassResponse = await fetchImpl(OVERPASS_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      ...openDataHeaders,
-    },
-    body: overpassBody,
-  });
+  let overpassData = null;
+  let lastError = null;
 
-  if (!overpassResponse.ok) {
-    throw new Error(`Request failed with status ${overpassResponse.status}`);
+  for (const overpassEndpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const overpassResponse = await fetchImpl(overpassEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          ...openDataHeaders,
+        },
+        body: overpassBody,
+      });
+
+      if (!overpassResponse.ok) {
+        lastError = new Error(`Request failed with status ${overpassResponse.status}`);
+        lastError.status = overpassResponse.status;
+        continue;
+      }
+
+      overpassData = await overpassResponse.json();
+      break;
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  const overpassData = await overpassResponse.json();
+  if (!overpassData) {
+    throw lastError || new Error('Request failed for all Overpass endpoints');
+  }
+
   const elements = Array.isArray(overpassData?.elements) ? overpassData.elements : [];
   const excluded = new Set(excludeNames.map((name) => normalizeSegmentText(name)));
   const companies = elements

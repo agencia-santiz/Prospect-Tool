@@ -71,6 +71,24 @@ query ListSavedLists($workspaceId: UUID!) @auth(level: USER) {
       segmentRaw
       status
     }
+    savedListItems_on_list {
+      lead {
+        id
+        status
+        company {
+          id
+          legalName
+          tradeName
+          segment
+          city
+          region
+          country
+          phone
+          website
+          score
+        }
+      }
+    }
   }
 }
 
@@ -81,6 +99,14 @@ query ListPipelineOverview($workspaceId: UUID!) @auth(level: USER) {
     isDefault
     createdAt
     updatedAt
+    stages: pipelineStages_on_pipeline {
+      id
+      name
+      sortOrder
+      color
+      createdAt
+      updatedAt
+    }
   }
 }
 
@@ -116,6 +142,29 @@ query ListContactsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
   }
 }
 
+query ListLeadsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
+  leads(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    status
+    rank
+    score
+    reason
+    source
+    company {
+      id
+      legalName
+      tradeName
+      segment
+      city
+      region
+      country
+      phone
+      website
+      score
+    }
+  }
+}
+
 query ListDealsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
   deals(where: { workspaceId: { eq: $workspaceId } }) {
     id
@@ -124,6 +173,7 @@ query ListDealsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
     priority
     nextStep
     notes
+    payload
     createdAt
     updatedAt
     company {
@@ -186,4 +236,239 @@ mutation BootstrapWorkspace(
       status: "active"
     }
   )
+}
+
+mutation CreateSavedList(
+  $id: UUID!
+  $workspaceId: UUID!
+  $name: String!
+) @auth(level: USER) {
+  savedList_insert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    name: $name
+  })
+}
+
+mutation UpsertCompany(
+  $id: UUID!
+  $workspaceId: UUID!
+  $legalName: String!
+  $tradeName: String!
+  $segment: String!
+  $city: String!
+  $region: String!
+  $country: String!
+  $phone: String
+  $website: String
+) @auth(level: USER) {
+  company_upsert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    legalName: $legalName
+    tradeName: $tradeName
+    segment: $segment
+    city: $city
+    region: $region
+    country: $country
+    phone: $phone
+    website: $website
+  })
+}
+
+mutation UpsertLead(
+  $id: UUID!
+  $workspaceId: UUID!
+  $companyId: UUID!
+  $status: String!
+  $rank: Int!
+  $score: Float!
+  $source: String
+) @auth(level: USER) {
+  lead_upsert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    companyId: $companyId
+    status: $status
+    rank: $rank
+    score: $score
+    source: $source
+  })
+}
+
+mutation AddLeadToSavedList(
+  $listId: UUID!
+  $leadId: UUID!
+) @auth(level: USER) {
+  savedListItem_upsert(data: {
+    listId: $listId
+    leadId: $leadId
+  })
+}
+
+mutation DeleteSavedList($id: UUID!) @auth(level: USER) {
+  savedList_delete(id: $id)
+}
+
+mutation UpsertPipeline(
+  $id: UUID!
+  $workspaceId: UUID!
+  $name: String!
+  $isDefault: Boolean
+) @auth(level: USER) {
+  pipeline_upsert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    name: $name
+    isDefault: $isDefault
+  })
+}
+
+mutation UpsertPipelineStage(
+  $id: UUID!
+  $pipelineId: UUID!
+  $name: String!
+  $sortOrder: Int!
+  $color: String!
+) @auth(level: USER) {
+  pipelineStage_upsert(data: {
+    id: $id
+    pipelineId: $pipelineId
+    name: $name
+    sortOrder: $sortOrder
+    color: $color
+  })
+}
+
+mutation UpsertDeal(
+  $id: UUID!
+  $workspaceId: UUID!
+  $pipelineId: UUID!
+  $stageId: UUID!
+  $title: String!
+  $companyId: UUID
+  $value: Float
+  $priority: String!
+  $nextStep: String
+  $notes: String
+  $payload: Any!
+) @auth(level: USER) {
+  deal_upsert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    pipelineId: $pipelineId
+    stageId: $stageId
+    title: $title
+    companyId: $companyId
+    value: $value
+    priority: $priority
+    nextStep: $nextStep
+    notes: $notes
+    payload: $payload
+  })
+}
+
+mutation DeleteDeal($id: UUID!) @auth(level: USER) {
+  deal_delete(id: $id)
+}
+
+mutation CreateUsageEvent(
+  $id: UUID!
+  $workspaceId: UUID!
+  $userId: UUID
+  $eventType: String!
+  $source: String
+  $quantity: Int!
+  $metadata: Any!
+) @auth(level: USER) {
+  usageEvent_insert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    userId: $userId
+    eventType: $eventType
+    source: $source
+    quantity: $quantity
+    metadata: $metadata
+  })
+}
+
+query ListUsageEventsByWorkspace($workspaceId: UUID!) @auth(level: USER) {
+  usageEvents(where: { workspaceId: { eq: $workspaceId } }) {
+    id
+    eventType
+    quantity
+    occurredAt
+  }
+}
+
+mutation UpsertEnrichmentJob(
+  $id: UUID!
+  $workspaceId: UUID!
+  $companyId: UUID
+  $jobType: String!
+  $payload: Any!
+) @auth(level: USER) {
+  enrichmentJob_upsert(data: {
+    id: $id
+    workspaceId: $workspaceId
+    companyId: $companyId
+    jobType: $jobType
+    status: "queued"
+    payload: $payload
+  })
+}
+
+mutation UpdateEnrichmentJobStatus(
+  $id: UUID!
+  $status: String!
+  $result: Any!
+  $errorMessage: String
+) @auth(level: USER) {
+  enrichmentJob_update(id: $id, data: {
+    status: $status
+    result: $result
+    errorMessage: $errorMessage
+  })
+}
+
+query ListQueuedEnrichmentJobs($workspaceId: UUID!) @auth(level: USER) {
+  enrichmentJobs(where: { workspaceId: { eq: $workspaceId }, status: { eq: "queued" } }, limit: 10) {
+    id
+    jobType
+    companyId
+    payload
+    attempts
+  }
+}
+
+query ListStaleDeals($workspaceId: UUID!, $staleDate: Timestamp!) @auth(level: USER) {
+  deals(where: { workspaceId: { eq: $workspaceId }, updatedAt: { lt: $staleDate } }, limit: 5) {
+    id
+    company { id }
+    pipeline { id }
+    stage { id }
+    title
+    value
+    priority
+    payload
+  }
+}
+
+query ListStaleLeads($workspaceId: UUID!, $staleDate: Timestamp!) @auth(level: USER) {
+  leads(where: { workspaceId: { eq: $workspaceId }, updatedAt: { lt: $staleDate } }, limit: 10) {
+    id
+    status
+    score
+    source
+    updatedAt
+    company {
+      id
+      tradeName
+      segment
+      city
+      region
+      phone
+      website
+    }
+  }
 }

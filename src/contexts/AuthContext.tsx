@@ -14,8 +14,12 @@ import {
   getCurrentUserByAuthUid,
   getWorkspaceBySlug,
   listWorkspaceMembers,
+  createUsageEvent,
+  listUsageEventsByWorkspace
 } from '@dataconnect/generated';
-import { firebaseAuth, firebaseDataConnect } from '../lib/firebase';
+import { firebaseAuth, firebaseDataConnect, isDataConnectSyncEnabled } from '../lib/firebase';
+import { getBackendBaseUrl } from '../utils/backendUrl.js';
+import { readPersistentValue, removePersistentValue, writePersistentValue } from '../utils/persistentStorage.js';
 import { User, UserPlan } from '../types';
 
 interface AuthContextType {
@@ -23,11 +27,11 @@ interface AuthContextType {
   workspace: AuthWorkspace | null;
   workspaceMembers: AuthWorkspaceMember[];
   membership: AuthMembership | null;
+  workspaceOrigin: WorkspaceOrigin;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  upgradePlan: () => void;
   incrementUsage: (count: number) => void;
   loading: boolean;
 }
@@ -113,7 +117,17 @@ interface LegacySessionResponse {
   expiresAt?: string;
 }
 
-const AUTH_API_BASE_URL = 'http://127.0.0.1:8787';
+type WorkspaceOrigin = 'remote' | 'local' | 'legacy';
+
+interface WorkspaceProfileResult {
+  user: User;
+  workspace: AuthWorkspace | null;
+  workspaceMembers: AuthWorkspaceMember[];
+  membership: AuthMembership | null;
+  workspaceOrigin: WorkspaceOrigin;
+}
+
+const AUTH_API_BASE_URL = getBackendBaseUrl();
 const AUTH_TOKEN_STORAGE_KEY = 'bloom_auth_token';
 const LEGACY_USER_STORAGE_KEY = 'nexus_user';
 
@@ -130,12 +144,13 @@ const normalizePlan = (plan?: string | null): UserPlan => {
   }
 };
 
+// Initial mapping from Firebase Auth — plan/limits are defaults until Data Connect loads the real record.
 const mapFirebaseUserToAppUser = (user: FirebaseUser): User => ({
   id: user.uid,
   name: user.displayName || user.email?.split('@')[0] || 'Usuário',
   email: user.email || '',
   avatar: user.photoURL || undefined,
-  plan: 'FREE',
+  plan: 'FREE', // Overwritten by mapDataConnectUser once the real record is fetched
   usage: 0,
   limit: 100,
 });
@@ -190,6 +205,67 @@ const mapDataConnectUser = (record: {
   usage: record.usageCount,
   limit: record.usageLimit,
 });
+
+const buildLocalWorkspaceProfile = (firebaseUser: FirebaseUser): WorkspaceProfileResult => {
+  const name = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuário';
+  const workspaceSlug = deriveWorkspaceSlug(firebaseUser.uid, firebaseUser.email || 'workspace@example.com');
+  const now = new Date().toISOString();
+
+  const user = mapFirebaseUserToAppUser(firebaseUser);
+  const workspace: AuthWorkspace = {
+    id: `local-${firebaseUser.uid}`,
+    ownerUserId: firebaseUser.uid,
+    name: deriveWorkspaceName(name, firebaseUser.email || 'workspace@example.com'),
+    slug: workspaceSlug,
+    plan: 'free',
+    memberCount: 1,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const member: AuthWorkspaceMember = {
+    workspaceId: workspace.id,
+    userId: firebaseUser.uid,
+    name: user.name,
+    email: user.email,
+    role: 'owner',
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  return {
+    user,
+    workspace,
+    workspaceMembers: [member],
+    membership: {
+      workspaceId: workspace.id,
+      userId: firebaseUser.uid,
+      role: 'owner',
+      status: 'active',
+    },
+    workspaceOrigin: 'local',
+  };
+};
+
+const isMissingDataConnectOperationError = (error: unknown) => {
+  const code =
+    typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code || '')
+      : '';
+  const message =
+    typeof error === 'object' && error && 'message' in error
+      ? String((error as { message?: unknown }).message || '')
+      : '';
+
+  return (
+    code === '404' ||
+    code === 'NOT_FOUND' ||
+    message.includes('operation "ListUsageEventsByWorkspace" not found') ||
+    message.includes('NOT_FOUND')
+  );
+};
 
 const mapLegacyWorkspace = (workspace?: LegacyAuthWorkspace | null) => workspace || null;
 
@@ -250,9 +326,9 @@ const mapMember = (member: {
   updatedAt: member.updatedAt,
 });
 
-const getWorkspaceProfile = async (firebaseUser: FirebaseUser) => {
-  if (!firebaseDataConnect || !firebaseUser.email) {
-    return null;
+const getWorkspaceProfile = async (firebaseUser: FirebaseUser): Promise<WorkspaceProfileResult | null> => {
+  if (!firebaseUser.email || !isDataConnectSyncEnabled || !firebaseDataConnect) {
+    return buildLocalWorkspaceProfile(firebaseUser);
   }
 
   const authUid = firebaseUser.uid;
@@ -284,6 +360,7 @@ const getWorkspaceProfile = async (firebaseUser: FirebaseUser) => {
       workspace: null,
       workspaceMembers: [],
       membership: null,
+      workspaceOrigin: 'remote',
     };
   }
 
@@ -291,11 +368,32 @@ const getWorkspaceProfile = async (firebaseUser: FirebaseUser) => {
   const workspaceMembers = membersResult.data.workspaceMembers.map(mapMember);
   const membership = workspaceMembers.find((member) => member.userId === userRecord.id) || null;
 
+  let monthlyUsage = userRecord.usageCount;
+  try {
+  const usageResult = await listUsageEventsByWorkspace(firebaseDataConnect, { workspaceId: workspaceRecord.id });
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    monthlyUsage = usageResult.data.usageEvents
+      .filter((e: any) => {
+        const d = new Date(e.occurredAt);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum: number, e: any) => sum + e.quantity, 0);
+  } catch (error) {
+    if (!isMissingDataConnectOperationError(error)) {
+      console.warn('Failed to load usage events, falling back to usageCount.', error);
+    }
+  }
+
+  const mappedUser = mapDataConnectUser(userRecord);
+  mappedUser.usage = monthlyUsage;
+
   return {
-    user: mapDataConnectUser(userRecord),
+    user: mappedUser,
     workspace: mapWorkspace(workspaceRecord, workspaceMembers.length),
     workspaceMembers,
     membership,
+    workspaceOrigin: 'remote',
   };
 };
 
@@ -334,8 +432,8 @@ const shouldFallbackToLegacyAuth = (error: unknown) => {
 };
 
 const hydrateLegacySession = async () => {
-  const storedToken = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-  localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+  const storedToken = readPersistentValue(AUTH_TOKEN_STORAGE_KEY);
+  removePersistentValue(LEGACY_USER_STORAGE_KEY);
 
   if (!storedToken) {
     return null;
@@ -353,9 +451,10 @@ const hydrateLegacySession = async () => {
       workspace: mapLegacyWorkspace(session.workspace),
       workspaceMembers: Array.isArray(session.members) ? session.members.map(mapLegacyWorkspaceMember) : [],
       membership: session.membership || null,
+      workspaceOrigin: 'legacy',
     };
   } catch {
-    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    removePersistentValue(AUTH_TOKEN_STORAGE_KEY);
     return null;
   }
 };
@@ -365,6 +464,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [workspaceMembers, setWorkspaceMembers] = useState<AuthWorkspaceMember[]>([]);
   const [membership, setMembership] = useState<AuthMembership | null>(null);
+  const [workspaceOrigin, setWorkspaceOrigin] = useState<WorkspaceOrigin>('legacy');
   const [loading, setLoading] = useState(true);
   const syncTokenRef = useRef(0);
 
@@ -407,6 +507,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setWorkspace(legacySession.workspace);
               setWorkspaceMembers(legacySession.workspaceMembers);
               setMembership(legacySession.membership);
+              setWorkspaceOrigin(legacySession.workspaceOrigin);
               setLoading(false);
               return;
             }
@@ -415,15 +516,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setWorkspace(null);
             setWorkspaceMembers([]);
             setMembership(null);
-            localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-            localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+            removePersistentValue(AUTH_TOKEN_STORAGE_KEY);
+            removePersistentValue(LEGACY_USER_STORAGE_KEY);
             setLoading(false);
             return;
           }
 
           setUser(mapFirebaseUserToAppUser(firebaseUser));
-          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-          localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+          removePersistentValue(AUTH_TOKEN_STORAGE_KEY);
+          removePersistentValue(LEGACY_USER_STORAGE_KEY);
+          setWorkspaceOrigin('remote');
           setLoading(false);
 
           try {
@@ -436,11 +538,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setWorkspace(profile.workspace);
             setWorkspaceMembers(profile.workspaceMembers);
             setMembership(profile.membership);
+            setWorkspaceOrigin(profile.workspaceOrigin);
           } catch {
             if (mounted && syncTokenRef.current === currentSync) {
               setWorkspace(null);
               setWorkspaceMembers([]);
               setMembership(null);
+              setWorkspaceOrigin('remote');
             }
           }
         })
@@ -462,12 +566,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }),
       });
 
-      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
-      localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+      writePersistentValue(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
+      removePersistentValue(LEGACY_USER_STORAGE_KEY);
       setUser(mapLegacyUser(session.user));
       setWorkspace(mapLegacyWorkspace(session.workspace));
       setWorkspaceMembers(Array.isArray(session.members) ? session.members.map(mapLegacyWorkspaceMember) : []);
       setMembership(session.membership || null);
+      setWorkspaceOrigin('legacy');
       setLoading(false);
       return;
     }
@@ -485,12 +590,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }),
         });
 
-        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
-        localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+        writePersistentValue(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
+        removePersistentValue(LEGACY_USER_STORAGE_KEY);
         setUser(mapLegacyUser(session.user));
         setWorkspace(mapLegacyWorkspace(session.workspace));
         setWorkspaceMembers(Array.isArray(session.members) ? session.members.map(mapLegacyWorkspaceMember) : []);
         setMembership(session.membership || null);
+        setWorkspaceOrigin('legacy');
         return;
       }
 
@@ -511,12 +617,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }),
       });
 
-      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
-      localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+      writePersistentValue(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
+      removePersistentValue(LEGACY_USER_STORAGE_KEY);
       setUser(mapLegacyUser(session.user));
       setWorkspace(mapLegacyWorkspace(session.workspace));
       setWorkspaceMembers(Array.isArray(session.members) ? session.members.map(mapLegacyWorkspaceMember) : []);
       setMembership(session.membership || null);
+      setWorkspaceOrigin('legacy');
       setLoading(false);
       return;
     }
@@ -536,12 +643,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }),
         });
 
-        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
-        localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+        writePersistentValue(AUTH_TOKEN_STORAGE_KEY, session.sessionToken);
+        removePersistentValue(LEGACY_USER_STORAGE_KEY);
         setUser(mapLegacyUser(session.user));
         setWorkspace(mapLegacyWorkspace(session.workspace));
         setWorkspaceMembers(Array.isArray(session.members) ? session.members.map(mapLegacyWorkspaceMember) : []);
         setMembership(session.membership || null);
+        setWorkspaceOrigin('legacy');
         return;
       }
 
@@ -557,7 +665,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await signOut(firebaseAuth);
       }
 
-      const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+      const token = readPersistentValue(AUTH_TOKEN_STORAGE_KEY);
       if (token) {
         await requestLegacyAuth('/auth/logout', {
           method: 'POST',
@@ -571,18 +679,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setWorkspace(null);
       setWorkspaceMembers([]);
       setMembership(null);
-      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-      localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+      setWorkspaceOrigin('legacy');
+      removePersistentValue(AUTH_TOKEN_STORAGE_KEY);
+      removePersistentValue(LEGACY_USER_STORAGE_KEY);
     }
   };
 
-  const upgradePlan = () => {
-    // Billing is not wired yet.
-  };
-
-  const incrementUsage = (count: number) => {
-    if (!user || !Number.isFinite(count) || count <= 0) {
+  const incrementUsage = async (count: number, eventType: string = 'search') => {
+    if (!user || !workspace || !Number.isFinite(count) || count <= 0) {
       return;
+    }
+
+    if (!isDataConnectSyncEnabled || !firebaseDataConnect) {
+      setUser((currentUser) => {
+        if (!currentUser) {
+          return currentUser;
+        }
+
+        return {
+          ...currentUser,
+          usage: currentUser.usage + count,
+        };
+      });
+      return;
+    }
+
+    try {
+        await createUsageEvent(firebaseDataConnect, {
+            id: crypto.randomUUID(),
+            workspaceId: workspace.id,
+            userId: user.id,
+            eventType,
+            source: 'app',
+            quantity: count,
+            metadata: {}
+        });
+    } catch (err) {
+        if (!isMissingDataConnectOperationError(err)) {
+          console.warn("Failed to record usage event, updating local count only.", err);
+        }
     }
 
     setUser((currentUser) => {
@@ -604,11 +739,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         workspace,
         workspaceMembers,
         membership,
+        workspaceOrigin,
         isAuthenticated: !!user,
         login,
         register,
         logout,
-        upgradePlan,
         incrementUsage,
         loading,
       }}

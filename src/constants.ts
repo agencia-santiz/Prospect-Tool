@@ -26,14 +26,14 @@ export const NAV_STRUCTURE: NavGroup[] = [
     {
         title: "Prospecção",
         items: [
-            { id: 'explore', label: 'Explorar Negócios', icon: Globe },
+            { id: 'explore', label: 'Explorar oportunidades', icon: Globe },
             { id: 'lists', label: 'Minhas Listas', icon: ListFilter },
         ]
     },
     {
         title: "Vendas",
         items: [
-            { id: 'pipeline', label: 'Pipeline (Kanban)', icon: Kanban },
+            { id: 'pipeline', label: 'Pipeline', icon: Kanban },
             { id: 'contacts', label: 'Contatos', icon: Users },
         ]
     }

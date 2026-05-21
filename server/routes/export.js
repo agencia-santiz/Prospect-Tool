@@ -1,10 +1,18 @@
 import { sendJson } from '../http.js';
 
 export const handleExportCsvRoute = async (response, context, requestData = {}) => {
+  const startedAt = Date.now();
   const body = requestData.body || {};
   const leads = Array.isArray(body.leads) ? body.leads : [];
 
   if (leads.length === 0) {
+    context.logger.warn({
+      event: 'csv_export_rejected_empty_payload',
+      requestId: context.requestId,
+      durationMs: Date.now() - startedAt,
+      rowCount: 0,
+    });
+
     sendJson(response, 400, {
       error: 'INVALID_REQUEST',
       message: 'leads array is required and cannot be empty',
@@ -21,6 +29,7 @@ export const handleExportCsvRoute = async (response, context, requestData = {}) 
     context.logger.info({
       event: 'csv_export_generated',
       count: leads.length,
+      durationMs: Date.now() - startedAt,
       requestId: context.requestId,
     });
 
@@ -36,6 +45,7 @@ export const handleExportCsvRoute = async (response, context, requestData = {}) 
     context.logger.error({
       event: 'csv_export_failed',
       error: error.message,
+      durationMs: Date.now() - startedAt,
       requestId: context.requestId,
     });
 

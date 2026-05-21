@@ -1,3 +1,5 @@
+import { filterLeadsBySegment } from '../../src/utils/segmentLeadMatcher.js';
+
 const clone = (value) => {
   if (value == null) {
     return value;
@@ -30,6 +32,8 @@ const SECTOR_EVIDENCE_KEYS = [
   'status_cadastral',
   'statusCadastral',
 ];
+
+const MAX_RESULTS_PER_SOURCE_CALL = 20;
 
 const getExpansionLevel = (segmentResolution) => {
   if (!segmentResolution) {
@@ -111,6 +115,165 @@ const buildSectorValidationSummary = (evaluation, source = 'local') => ({
   isRejected: evaluation.isRejected,
 });
 
+const normalizeSearchVariant = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+
+const splitVariantList = (value) =>
+  String(value || '')
+    .split(/[,;\n|]+/g)
+    .flatMap((item) => item.split(/\s+\/\s+/g))
+    .map((item) => normalizeSearchVariant(item))
+    .filter(Boolean);
+
+const pushUniqueVariant = (variants, seen, value) => {
+  const variant = normalizeSearchVariant(value);
+  if (!variant) {
+    return;
+  }
+
+  const normalized = variant.toLowerCase();
+  if (seen.has(normalized)) {
+    return;
+  }
+
+  seen.add(normalized);
+  variants.push(variant);
+};
+
+const buildSearchVariants = async ({ plan, requestedQuantity, fallbackLeadSource, segmentResolver, refinedQuery = '' }) => {
+  const variants = [];
+  const seen = new Set();
+
+  pushUniqueVariant(variants, seen, refinedQuery);
+  pushUniqueVariant(variants, seen, plan?.segment?.label);
+  pushUniqueVariant(variants, seen, plan?.segment?.query);
+  pushUniqueVariant(variants, seen, plan?.input?.segment);
+  pushUniqueVariant(variants, seen, plan?.segment?.category);
+  pushUniqueVariant(variants, seen, plan?.segment?.aliases);
+  pushUniqueVariant(variants, seen, plan?.segment?.positiveTerms);
+
+  if (requestedQuantity > MAX_RESULTS_PER_SOURCE_CALL && typeof segmentResolver?.getSegmentSuggestions === 'function') {
+    const suggestions = segmentResolver.getSegmentSuggestions(plan?.input?.segment || plan?.segment?.label || '', 12);
+    for (const suggestion of suggestions) {
+      pushUniqueVariant(variants, seen, suggestion?.label);
+    }
+  }
+
+  if (!normalizeSearchVariant(refinedQuery) && fallbackLeadSource && typeof fallbackLeadSource.refineSearchQuery === 'function') {
+    try {
+      const refined = await fallbackLeadSource.refineSearchQuery(plan?.input?.segment || plan?.segment?.label || '');
+      for (const variant of splitVariantList(refined)) {
+        pushUniqueVariant(variants, seen, variant);
+      }
+    } catch {
+      // Ignore query expansion failures and keep the original query set.
+    }
+  }
+
+  return variants;
+};
+
+const normalizeBoundingBox = (boundingBox) => {
+  if (!boundingBox) {
+    return null;
+  }
+
+  const south = Number(boundingBox.south);
+  const west = Number(boundingBox.west);
+  const north = Number(boundingBox.north);
+  const east = Number(boundingBox.east);
+
+  if (![south, west, north, east].every((value) => Number.isFinite(value))) {
+    return null;
+  }
+
+  if (south >= north || west >= east) {
+    return null;
+  }
+
+  return {
+    south,
+    west,
+    north,
+    east,
+  };
+};
+
+const buildLocationVariants = (plan, requestedQuantity) => {
+  const normalizedBoundingBox = normalizeBoundingBox(plan?.location?.boundingBox);
+  if (!normalizedBoundingBox || requestedQuantity <= MAX_RESULTS_PER_SOURCE_CALL) {
+    return [
+      {
+        key: 'base',
+        plan,
+      },
+    ];
+  }
+
+  const gridSize = requestedQuantity >= 100 ? 3 : 2;
+  const latStep = (normalizedBoundingBox.north - normalizedBoundingBox.south) / gridSize;
+  const lonStep = (normalizedBoundingBox.east - normalizedBoundingBox.west) / gridSize;
+
+  const variants = [];
+  for (let row = 0; row < gridSize; row += 1) {
+    for (let col = 0; col < gridSize; col += 1) {
+      const sliceSouth = row === 0 ? normalizedBoundingBox.south : normalizedBoundingBox.south + (latStep * row);
+      const sliceNorth = row === gridSize - 1 ? normalizedBoundingBox.north : normalizedBoundingBox.south + (latStep * (row + 1));
+      const sliceWest = col === 0 ? normalizedBoundingBox.west : normalizedBoundingBox.west + (lonStep * col);
+      const sliceEast = col === gridSize - 1 ? normalizedBoundingBox.east : normalizedBoundingBox.west + (lonStep * (col + 1));
+
+      variants.push({
+        key: `slice-${row}-${col}`,
+        plan: {
+          ...plan,
+          location: {
+            ...plan.location,
+            boundingBox: {
+              south: sliceSouth,
+              west: sliceWest,
+              north: sliceNorth,
+              east: sliceEast,
+            },
+          },
+          googleLocation: null,
+        },
+      });
+    }
+  }
+
+  return variants;
+};
+
+const buildRuntimeExcludeNames = (planExcludeNames = [], leads = []) => {
+  const seen = new Set();
+  const runtimeExcludeNames = [];
+
+  const add = (value) => {
+    const text = String(value || '').trim();
+    if (!text) {
+      return;
+    }
+
+    const normalized = text.toLowerCase();
+    if (seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    runtimeExcludeNames.push(text);
+  };
+
+  for (const name of planExcludeNames) {
+    add(name);
+  }
+
+  for (const lead of leads) {
+    add(lead?.nome_fantasia);
+    add(lead?.razao_social);
+  }
+
+  return runtimeExcludeNames.slice(0, 200);
+};
+
 export const createSearchOrchestrator = ({
   locationResolver,
   segmentResolver,
@@ -151,6 +314,7 @@ export const createSearchOrchestrator = ({
     segment,
     excludeNames = [],
     quantity = 9,
+    intent = 'NONE',
   } = {}) => {
     const trimmedLocation = String(location || '').trim();
     const trimmedSegment = String(segment || '').trim();
@@ -167,12 +331,17 @@ export const createSearchOrchestrator = ({
     const canonicalSegmentId = resolvedSegment?.canonicalId || null;
     const expansionLevel = getExpansionLevel(resolvedSegment);
     const sourcePlan = getSourcePlan(expansionLevel, Boolean(auxiliaryLeadSource));
-    const googleLocation = geoSource && typeof geoSource.geocodeLocation === 'function'
-      ? await geoSource.geocodeLocation(trimmedLocation, {
+    let googleLocation = null;
+    if (geoSource && typeof geoSource.geocodeLocation === 'function') {
+      try {
+        googleLocation = await geoSource.geocodeLocation(trimmedLocation, {
           regionCode: resolvedLocation.stateCode || 'BR',
           languageCode: 'pt-BR',
-        })
-      : null;
+        });
+      } catch {
+        googleLocation = null;
+      }
+    }
     const sectorValidationProfile = sectorValidationService?.getSegmentCnaeProfile
       ? sectorValidationService.getSegmentCnaeProfile(resolvedSegment?.label || trimmedSegment)
       : null;
@@ -184,6 +353,7 @@ export const createSearchOrchestrator = ({
         segment: trimmedSegment,
         excludeNames: excludeNames.slice(0, 50).map((value) => String(value)),
         quantity,
+        intent,
       },
       location: {
         ...clone(resolvedLocation),
@@ -221,30 +391,51 @@ export const createSearchOrchestrator = ({
 
   const runSearch = async (params = {}) => {
     const plan = await planSearch(params);
+    const requestedQuantity = Math.max(1, Number(plan.input.quantity) || 1);
+    const useVariantSearch = requestedQuantity > MAX_RESULTS_PER_SOURCE_CALL;
+    const fetchQuantity = useVariantSearch
+      ? requestedQuantity
+      : Math.min(Math.max(requestedQuantity + 10, requestedQuantity * 2), 20);
+
     const searchArgs = {
       location: plan.location.displayLabel,
       segment: plan.segment.label,
       excludeNames: plan.input.excludeNames,
-      quantity: plan.input.quantity,
+      quantity: fetchQuantity,
       plan,
     };
 
     const actualSources = [];
-    
-    // Intelligence Layer: Query Expansion
-    // If the segment is broad or unknown, use Gemini to refine/expand the search string
+    let refinedSearchQuery = '';
+
     if (plan.segment.confidence === 'broad' && fallbackLeadSource && typeof fallbackLeadSource.refineSearchQuery === 'function') {
       try {
         const refined = await fallbackLeadSource.refineSearchQuery(plan.input.segment);
-        if (refined && refined !== plan.input.segment) {
+        refinedSearchQuery = refined || '';
+        if (refined && !useVariantSearch) {
           searchArgs.segment = refined;
         }
-      } catch (e) {
-        // Silently continue if expansion fails
+      } catch {
+        // Silently continue if expansion fails.
       }
     }
 
-    let leads = [];
+    const searchVariants = useVariantSearch
+      ? await buildSearchVariants({
+          plan,
+          requestedQuantity,
+          fallbackLeadSource,
+          segmentResolver,
+          refinedQuery: refinedSearchQuery,
+        })
+      : [searchArgs.segment];
+
+    if (useVariantSearch && searchVariants.length > 0) {
+      searchArgs.segment = searchVariants[0];
+    }
+
+    const locationVariants = buildLocationVariants(plan, requestedQuantity);
+
     const sectorValidationSummary = plan.sectorValidation?.enabled ? {
       enabled: true,
       profile: clone(plan.sectorValidation.profile),
@@ -263,72 +454,121 @@ export const createSearchOrchestrator = ({
       rejectedLeads: 0,
     };
 
+    let leads = [];
+
+    const addLeads = (incomingLeads, dedupeAgainstExisting = false) => {
+      if (!Array.isArray(incomingLeads) || incomingLeads.length === 0) {
+        return;
+      }
+
+      if (!dedupeAgainstExisting) {
+        leads.push(...incomingLeads);
+        return;
+      }
+
+      const seen = new Set(leads.map((lead) => `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`));
+
+      for (const lead of incomingLeads) {
+        const key = `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`;
+        if (!seen.has(key)) {
+          leads.push(lead);
+          seen.add(key);
+        }
+        if (leads.length >= requestedQuantity) {
+          break;
+        }
+      }
+    };
+
+    const fetchFromSource = async (source, sourceName, contextSource, { recordAttemptEvenIfEmpty = false } = {}) => {
+      if (!source || typeof source.fetchEnrichedLeads !== 'function' || leads.length >= requestedQuantity) {
+        return;
+      }
+
+      const variantsToTry = searchVariants.length > 0 ? searchVariants : [searchArgs.segment];
+      const locationsToTry = locationVariants.length > 0 ? locationVariants : [{ key: 'base', plan }];
+      const maxPasses = useVariantSearch
+        ? Math.max(2, Math.ceil(requestedQuantity / MAX_RESULTS_PER_SOURCE_CALL))
+        : 1;
+      let sourceAttempted = false;
+      let sourceHadResults = false;
+
+      for (let passIndex = 0; passIndex < maxPasses && leads.length < requestedQuantity; passIndex += 1) {
+        let passAddedLeads = false;
+
+        for (const locationVariant of locationsToTry) {
+          if (leads.length >= requestedQuantity) {
+            break;
+          }
+
+          for (const variant of variantsToTry) {
+            if (leads.length >= requestedQuantity) {
+              break;
+            }
+
+            try {
+              const requestPlan = locationVariant.plan || plan;
+              const runtimeExcludeNames = buildRuntimeExcludeNames(plan.input.excludeNames, leads);
+
+              const fetchedLeads = normalizeLeads(await source.fetchEnrichedLeads({
+                ...searchArgs,
+                plan: requestPlan,
+                segment: variant,
+                quantity: searchArgs.quantity,
+                excludeNames: runtimeExcludeNames,
+              }), {
+                location: requestPlan.location,
+                segment: plan.segment,
+                source: contextSource,
+              });
+
+              sourceAttempted = true;
+
+              const beforeCount = leads.length;
+              const filterQuery = useVariantSearch ? variant : plan.segment.label;
+              const filteredLeads = filterLeadsBySegment(fetchedLeads, filterQuery);
+
+              if (filteredLeads.length > 0) {
+                sourceHadResults = true;
+                addLeads(filteredLeads, useVariantSearch || sourceName !== plan.sourcePlan.primary);
+              }
+
+              if (leads.length > beforeCount) {
+                passAddedLeads = true;
+              }
+            } catch (error) {
+              if (error?.code === 'MISSING_GOOGLE_MAPS_API_KEY' || error?.code === 'MISSING_GEMINI_API_KEY') {
+                continue;
+              }
+            }
+          }
+        }
+
+        if (!passAddedLeads) {
+          break;
+        }
+      }
+
+      if ((recordAttemptEvenIfEmpty ? sourceAttempted : sourceHadResults) && !actualSources.includes(sourceName)) {
+        actualSources.push(sourceName);
+      }
+    };
+
     try {
-      leads = normalizeLeads(await resolvedPrimaryLeadSource.fetchEnrichedLeads(searchArgs), {
-        location: plan.location,
-        segment: plan.segment,
-        source: plan.sourcePlan.primary,
+      await fetchFromSource(resolvedPrimaryLeadSource, plan.sourcePlan.primary, plan.sourcePlan.primary, {
+        recordAttemptEvenIfEmpty: true,
       });
-      actualSources.push(plan.sourcePlan.primary);
+
+      if (leads.length < requestedQuantity) {
+        await fetchFromSource(fallbackLeadSource, 'gemini_fallback', 'gemini_fallback');
+      }
+
+      if (leads.length < requestedQuantity) {
+        await fetchFromSource(auxiliaryLeadSource, 'open_data', 'open_data');
+      }
     } catch (error) {
       if (error?.code !== 'MISSING_GOOGLE_MAPS_API_KEY' && error?.code !== 'MISSING_GEMINI_API_KEY') {
         throw error;
-      }
-    }
-
-    if (leads.length < plan.input.quantity && fallbackLeadSource && typeof fallbackLeadSource.fetchEnrichedLeads === 'function') {
-      try {
-        const fallbackLeads = normalizeLeads(await fallbackLeadSource.fetchEnrichedLeads(searchArgs), {
-          location: plan.location,
-          segment: plan.segment,
-          source: 'gemini_fallback',
-        });
-        const seen = new Set(leads.map((lead) => `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`));
-        for (const lead of fallbackLeads) {
-          const key = `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`;
-          if (!seen.has(key)) {
-            leads.push(lead);
-            seen.add(key);
-          }
-          if (leads.length >= plan.input.quantity) {
-            break;
-          }
-        }
-        if (fallbackLeads.length > 0) {
-          actualSources.push('gemini_fallback');
-        }
-      } catch (error) {
-        if (actualSources.length === 0) {
-          throw error;
-        }
-      }
-    }
-
-    if (leads.length < plan.input.quantity && auxiliaryLeadSource && typeof auxiliaryLeadSource.fetchEnrichedLeads === 'function') {
-      try {
-        const auxiliaryLeads = normalizeLeads(await auxiliaryLeadSource.fetchEnrichedLeads(searchArgs), {
-          location: plan.location,
-          segment: plan.segment,
-          source: 'open_data',
-        });
-        const seen = new Set(leads.map((lead) => `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`));
-        for (const lead of auxiliaryLeads) {
-          const key = `${String(lead.nome_fantasia || '').toLowerCase()}|${String(lead.endereco || lead.cidade || '').toLowerCase()}`;
-          if (!seen.has(key)) {
-            leads.push(lead);
-            seen.add(key);
-          }
-          if (leads.length >= plan.input.quantity) {
-            break;
-          }
-        }
-        if (auxiliaryLeads.length > 0) {
-          actualSources.push('open_data');
-        }
-      } catch (error) {
-        if (actualSources.length === 0) {
-          throw error;
-        }
       }
     }
 
@@ -394,13 +634,15 @@ export const createSearchOrchestrator = ({
         }))
       : dedupedLeads;
 
+    const preciselyMatchedLeads = validatedLeads.filter((lead) => !lead?.sectorValidation?.isRejected);
+
     const rankedLeads = leadRanker && typeof leadRanker.rankLeads === 'function'
-      ? leadRanker.rankLeads(validatedLeads)
-      : validatedLeads;
+      ? leadRanker.rankLeads(preciselyMatchedLeads, plan.input.intent)
+      : preciselyMatchedLeads;
 
     return {
       plan,
-      leads: rankedLeads,
+      leads: rankedLeads.slice(0, requestedQuantity),
       sourcesUsed: actualSources,
       dedupe: dedupeResult.report,
       sectorValidation: sectorValidationSummary,

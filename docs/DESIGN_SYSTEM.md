@@ -117,7 +117,7 @@ Every modal in Bloom Leads should follow the same basic structure:
 
 Purpose:
 - Present the pricing narrative and upgrade path.
-- Work as a simulated upsell until billing is real.
+- Work as an informational plan surface until billing is wired.
 
 Recommended anatomy:
 
@@ -136,7 +136,7 @@ Usage rules:
 - Keep one clear primary CTA.
 - Avoid competing buttons that pull attention away from the upgrade path.
 - On mobile, stack the value rail above the pricing rail.
-- If the flow is still simulated, say so in the modal copy or badge.
+- If billing is not wired, say that plainly and avoid fake processing states.
 - Keep trust language factual. Do not imply a live payment provider if the flow is only a demo.
 - Use strong contrast between the value panel and the conversion panel so the hierarchy is obvious at a glance.
 
@@ -176,6 +176,15 @@ Usage rules:
 - Secondary buttons should remain neutral and quiet.
 - The overlay should be dark enough to separate the modal from the app, but not fully opaque.
 - A modal should feel like a temporary workspace, not a new page.
+
+### 3.6 Dropdowns and overlays
+
+- Dropdowns, autocomplete menus, popovers, and context menus must never be clipped by the card or panel that triggers them.
+- Render overlays outside the clipping container, preferably through a portal or an outer shell with `overflow: visible` and a higher stacking context.
+- If a trigger sits inside a card, the card cannot use `overflow: hidden` when its menu needs to escape the boundary.
+- The full menu must remain visible above the trigger surface, even when it grows beyond the card edge.
+- Prefer a shared floating-layer component for any overlay that can escape a card; do not hand-roll absolute dropdowns inside cards when the menu may cross the boundary.
+- This rule applies to city suggestions, segment suggestions, select menus, status menus, and any future dropdown in the product.
 
 ## 4. Open items [aberto]
 

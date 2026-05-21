@@ -1,10 +1,12 @@
 import { normalizeSegmentText } from '../../src/utils/segmentDatabase.js';
+import { filterLeadsBySegment } from '../../src/utils/segmentLeadMatcher.js';
 
 const GOOGLE_PLACES_SEARCH_ENDPOINT = 'https://places.googleapis.com/v1/places:searchText';
 const GOOGLE_PLACES_DETAILS_ENDPOINT = 'https://places.googleapis.com/v1/places';
 const GOOGLE_GEOCODING_ENDPOINT = 'https://maps.googleapis.com/maps/api/geocode/json';
 const DEFAULT_LANGUAGE_CODE = 'pt-BR';
 const DEFAULT_REGION_CODE = 'BR';
+const GOOGLE_PLACES_MAX_PAGE_SIZE = 20;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -104,16 +106,16 @@ const buildRectangleBias = (boundingBox) => {
 };
 
 const buildLocationBias = (plan, geocodeResult) => {
+  const fromBoundingBox = buildRectangleBias(plan?.location?.boundingBox);
+  if (fromBoundingBox) {
+    return fromBoundingBox;
+  }
+
   if (geocodeResult?.location) {
     const circle = buildCircleBias(geocodeResult.location, 9000);
     if (circle) {
       return circle;
     }
-  }
-
-  const fromBoundingBox = buildRectangleBias(plan?.location?.boundingBox);
-  if (fromBoundingBox) {
-    return fromBoundingBox;
   }
 
   return null;
@@ -189,6 +191,8 @@ const mapGooglePlaceToCompany = (place, locationContext, segmentLabel) => {
   const businessName = place?.displayName?.text || place?.displayName || place?.formattedAddress || segmentLabel || 'Empresa sem nome';
   const website = place?.websiteUri ? stripProtocol(place.websiteUri) : undefined;
   const phone = normalizePhone(place?.nationalPhoneNumber || place?.internationalPhoneNumber) || undefined;
+  const rating = toNumber(place?.rating);
+  const userRatingsTotal = toNumber(place?.userRatingCount ?? place?.userRatingsTotal);
   const city = normalizeCity(place, locationContext);
   const uf = normalizeState(place, locationContext);
   const country = normalizeCountry(place, locationContext);
@@ -226,6 +230,8 @@ const mapGooglePlaceToCompany = (place, locationContext, segmentLabel) => {
     telefone: phone,
     email: undefined,
     website,
+    rating: Number.isFinite(rating) ? rating : undefined,
+    userRatingsTotal: Number.isFinite(userRatingsTotal) ? userRatingsTotal : undefined,
     whatsappStatus: hasWhatsAppEvidence
       ? 'CONFIRMED'
       : phone
@@ -234,6 +240,13 @@ const mapGooglePlaceToCompany = (place, locationContext, segmentLabel) => {
     status: 'NEW',
     score: Math.min(100, baseScore),
     source: 'GOOGLE_MAPS',
+    provenance: {
+      source: 'GOOGLE_MAPS',
+      primaryType: place?.primaryType || null,
+      types: Array.isArray(place?.types) ? place.types : [],
+      searchSegment: segmentLabel,
+      location: locationContext,
+    },
     googleMapsUri: place?.googleMapsUri || undefined,
     socials: {
       linkedin: undefined,
@@ -316,10 +329,11 @@ export const createGoogleMapsService = ({
       throw error;
     }
 
-    const normalizedPageSize = Math.max(1, Math.min(Number(pageSize) || 9, 20));
+    const requestedResultCount = Math.max(1, Number(pageSize) || 9);
+    const normalizedPageSize = Math.min(requestedResultCount, GOOGLE_PLACES_MAX_PAGE_SIZE);
     const cacheKey = JSON.stringify({
       query: normalizeText(query),
-      pageSize: normalizedPageSize,
+      requestedResultCount,
       languageCode,
       regionCode,
       locationBias,
@@ -330,41 +344,65 @@ export const createGoogleMapsService = ({
       return clone(searchCache.get(cacheKey));
     }
 
-    const payload = await fetchJson(fetchImpl, GOOGLE_PLACES_SEARCH_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': [
-          'places.id',
-          'places.displayName',
-          'places.formattedAddress',
-          'places.location',
-          'places.primaryType',
-          'places.types',
-          'places.websiteUri',
-          'places.nationalPhoneNumber',
-          'places.internationalPhoneNumber',
-          'places.googleMapsUri',
-          'places.businessStatus',
-          'places.addressComponents',
-          'places.currentOpeningHours',
-          'places.regularOpeningHours',
-        ].join(','),
-      },
-      body: JSON.stringify({
-        textQuery: query,
-        pageSize: normalizedPageSize,
-        languageCode,
-        regionCode,
-        includePureServiceAreaBusinesses,
-        ...(locationBias ? { locationBias } : {}),
-      }),
-    });
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': [
+        'places.id',
+        'places.displayName',
+        'places.formattedAddress',
+        'places.location',
+        'places.primaryType',
+        'places.types',
+        'places.websiteUri',
+        'places.nationalPhoneNumber',
+        'places.internationalPhoneNumber',
+        'places.rating',
+        'places.userRatingCount',
+        'places.googleMapsUri',
+        'places.businessStatus',
+        'places.addressComponents',
+        'places.currentOpeningHours',
+        'places.regularOpeningHours',
+        'nextPageToken',
+      ].join(','),
+    };
 
-    const places = normalizePlacesResponse(payload);
-    searchCache.set(cacheKey, places);
-    return clone(places);
+    const locationRequest = locationBias?.rectangle
+      ? { locationRestriction: locationBias }
+      : locationBias
+        ? { locationBias }
+        : {};
+
+    const baseRequestBody = {
+      textQuery: query,
+      pageSize: normalizedPageSize,
+      languageCode,
+      regionCode,
+      includePureServiceAreaBusinesses,
+      ...locationRequest,
+    };
+
+    const places = [];
+    let nextPageToken = null;
+
+    do {
+      const payload = await fetchJson(fetchImpl, GOOGLE_PLACES_SEARCH_ENDPOINT, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: JSON.stringify({
+          ...baseRequestBody,
+          ...(nextPageToken ? { pageToken: nextPageToken } : {}),
+        }),
+      });
+
+      places.push(...normalizePlacesResponse(payload));
+      nextPageToken = payload?.nextPageToken || null;
+    } while (nextPageToken && places.length < requestedResultCount);
+
+    const limitedPlaces = places.slice(0, requestedResultCount);
+    searchCache.set(cacheKey, limitedPlaces);
+    return clone(limitedPlaces);
   };
 
   const fetchEnrichedLeads = async (locationOrArgs, segment, excludeNames = [], quantity = 9) => {
@@ -380,13 +418,16 @@ export const createGoogleMapsService = ({
     const location = String(args.location || '').trim();
     const resolvedSegment = String(args.segment || '').trim();
     const resolvedExcludeNames = Array.isArray(args.excludeNames) ? args.excludeNames : [];
-    const resolvedQuantity = Math.max(1, Math.min(Number(args.quantity) || 9, 20));
+    const resolvedQuantity = Math.max(1, Number(args.quantity) || 9);
     const plan = args.plan || {};
     const locationContext = plan.location || {};
-    const geocodedLocation = plan.googleLocation || await geocodeLocation(location, {
-      regionCode: locationContext.countryCode || DEFAULT_REGION_CODE,
-      languageCode: DEFAULT_LANGUAGE_CODE,
-    });
+    const hasPlanBoundingBox = Boolean(buildRectangleBias(locationContext.boundingBox));
+    const geocodedLocation = hasPlanBoundingBox
+      ? null
+      : plan.googleLocation || await geocodeLocation(location, {
+          regionCode: locationContext.countryCode || DEFAULT_REGION_CODE,
+          languageCode: DEFAULT_LANGUAGE_CODE,
+        });
     const locationBias = buildLocationBias(plan, geocodedLocation);
     const canonicalQuery = `${resolvedSegment} em ${location}`;
 
@@ -404,7 +445,7 @@ export const createGoogleMapsService = ({
       .map((place) => mapGooglePlaceToCompany(place, locationContext, resolvedSegment))
       .filter((company) => !excluded.has(normalizeText(company.nome_fantasia)));
 
-    return dedupeCompanies(companies).slice(0, resolvedQuantity);
+    return filterLeadsBySegment(dedupeCompanies(companies), resolvedSegment).slice(0, resolvedQuantity);
   };
 
   return {

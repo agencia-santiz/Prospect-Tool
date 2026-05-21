@@ -21,10 +21,10 @@ test('LeadRanker - Ranks based on phone and website', () => {
   const ranked = leadRanker.rankLeads(leads);
 
   assert.strictEqual(ranked.length, 4);
-  assert.strictEqual(ranked[0].id, '4'); // Both
-  assert.strictEqual(ranked[1].id, '2'); // Phone > Website
-  assert.strictEqual(ranked[2].id, '3'); // Website
-  assert.strictEqual(ranked[3].id, '1'); // None
+  assert.strictEqual(ranked[0].id, '4');
+  assert.strictEqual(ranked[1].id, '2');
+  assert.strictEqual(ranked[2].id, '3');
+  assert.strictEqual(ranked[3].id, '1');
 
   assert.strictEqual(ranked[0].score > ranked[1].score, true);
   assert.strictEqual(ranked[1].score > ranked[2].score, true);
@@ -49,10 +49,10 @@ test('LeadRanker - Penalizes closed businesses', () => {
   assert.strictEqual(ranked[1].id, '3');
   assert.strictEqual(ranked[2].id, '2');
 
-  assert.strictEqual(ranked[2].score, 0); // Max drop to 0
+  assert.strictEqual(ranked[2].score, 0);
 });
 
-test('LeadRanker - Rewards high ratings and user ratings count', () => {
+test('LeadRanker - Rewards Google rating and review count', () => {
   const leadRanker = createLeadRanker();
 
   const leads = [
@@ -66,9 +66,9 @@ test('LeadRanker - Rewards high ratings and user ratings count', () => {
   assert.strictEqual(ranked[0].id, '2');
   assert.strictEqual(ranked[2].id, '3');
 
-  assert.ok(ranked[0].rankingReasons.includes('Boa avaliação (4.5)'));
+  assert.ok(ranked[0].rankingReasons.some((reason) => reason.startsWith('Avaliação Google (4.5)')));
   assert.ok(ranked[0].rankingReasons.includes('Muitas avaliações'));
-  assert.ok(ranked[2].rankingReasons.includes('Avaliação baixa (2)'));
+  assert.ok(ranked[2].rankingReasons.some((reason) => reason.startsWith('Avaliação Google (2.0)')));
 });
 
 test('LeadRanker - Evaluates sector validation', () => {

@@ -92,7 +92,16 @@ const coreRoutes = [
   { method: 'POST', path: '/export/csv', handler: handleExportCsvRoute },
 ];
 
-const readJsonBody = (request) => new Promise((resolve, reject) => {
+const readJsonBody = (request) => {
+  if (request && 'body' in request && request.body !== undefined) {
+    if (typeof request.body === 'string') {
+      return JSON.parse(request.body);
+    }
+
+    return request.body;
+  }
+
+  return new Promise((resolve, reject) => {
   const chunks = [];
 
   request.on('data', (chunk) => {
@@ -115,12 +124,13 @@ const readJsonBody = (request) => new Promise((resolve, reject) => {
   });
 
   request.on('error', reject);
-});
+  });
+};
 
-export const createBackendApp = ({ env = process.env, logger = createLogger(), services = {} } = {}) => {
+export const createBackendRequestHandler = ({ env = process.env, logger = createLogger(), services = {} } = {}) => {
   const context = createContext({ env, logger, services });
 
-  return http.createServer(async (request, response) => {
+  return async (request, response) => {
     const requestId = request.headers['x-request-id'] || randomUUID();
     const startedAt = Date.now();
     const requestMethod = request.method || 'GET';
@@ -267,6 +277,14 @@ export const createBackendApp = ({ env = process.env, logger = createLogger(), s
         durationMs: Date.now() - startedAt,
       });
     }
+  };
+};
+
+export const createBackendApp = ({ env = process.env, logger = createLogger(), services = {} } = {}) => {
+  const requestHandler = createBackendRequestHandler({ env, logger, services });
+
+  return http.createServer((request, response) => {
+    void requestHandler(request, response);
   });
 };
 

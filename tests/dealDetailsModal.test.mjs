@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const repoRoot = join(here, '..');
+
+const modalSource = await readFile(join(repoRoot, 'src', 'components', 'DealDetailsModal.tsx'), 'utf8');
+
+assert.ok(modalSource.includes('Salvar alterações'));
+assert.ok(modalSource.includes('Gerar proposta'));
+assert.ok(modalSource.includes('Editar'));
+assert.ok(modalSource.includes('Cancelar'));
+assert.ok(modalSource.includes("const TAB_ITEMS = ['Visão Geral', 'Atividades', 'Contatos'] as const;"));
+assert.ok(modalSource.includes('Situação atual'));
+assert.ok(modalSource.includes('Próxima ação'));
+assert.ok(modalSource.includes('Dados comerciais'));
+assert.ok(modalSource.includes('Produção'));
+assert.ok(modalSource.includes('Pendências'));
+assert.ok(modalSource.includes('Histórico curto'));
+assert.ok(modalSource.includes('Detalhes da empresa'));
+assert.ok(modalSource.includes('Detalhes do registro'));
+assert.ok(modalSource.includes('Campos personalizados'));
+assert.ok(modalSource.includes('Comercial'));
+assert.ok(modalSource.includes('Produção'));
+assert.ok(modalSource.includes('Outros'));
+assert.ok(modalSource.includes('Prioridade'));
+assert.ok(modalSource.includes('Tarefas'));
+assert.ok(modalSource.includes('Oportunidades'));
+assert.ok(modalSource.includes('Ligar'));
+assert.ok(modalSource.includes('WhatsApp'));
+assert.ok(modalSource.includes('Registrar atividade'));
+assert.ok(modalSource.includes('Adicionar pessoa'));
+assert.ok(modalSource.includes('ownerUserId'));
+assert.ok(modalSource.includes('summary'));
+assert.ok(modalSource.includes('workspaceMembers'));
+assert.ok(modalSource.includes('Sem proposta vinculada'));
+assert.ok(modalSource.includes('Sem arquivo vinculado'));
+assert.ok(modalSource.includes('onSave(normalizedDeal)'));
+assert.ok(modalSource.includes('handleCloseModal'));
+assert.ok(modalSource.includes('updateContactField'));
+assert.ok(modalSource.includes('updatePersonField'));
+assert.ok(modalSource.includes('updateTaskText'));
+assert.ok(modalSource.includes('upsertCustomField'));

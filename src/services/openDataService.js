@@ -1,9 +1,12 @@
-import { normalizeSegmentText, resolveSegmentQuery } from '../utils/segmentDatabase.js';
+import { normalizeSegmentText, resolveSegmentQuery, resolveSegmentRecord } from '../utils/segmentDatabase.js';
+import { filterLeadsBySegment } from '../utils/segmentLeadMatcher.js';
 import { isWhatsAppLink, normalizeWhatsAppPhone } from '../utils/whatsappLink.js';
 
 const NOMINATIM_ENDPOINT = 'https://nominatim.openstreetmap.org/search';
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 const OPEN_DATA_SOURCE = 'OPEN_DATA';
+const OPEN_DATA_USER_AGENT = 'BloomLeadsDesktop/1.0 (OpenDataFallback)';
+const OPEN_DATA_ACCEPT_LANGUAGE = 'pt-BR,pt;q=0.9,en;q=0.6';
 
 const DEFAULT_OPEN_DATA_FILTERS = [
   { key: 'office', values: ['company'] },
@@ -17,22 +20,41 @@ const createFilters = (groups) =>
     group.values.map((value) => ({ key: group.key, value }))
   );
 
+const createPizzaFilters = () => ([
+  { tags: [{ key: 'cuisine', value: 'pizza' }] },
+  { tags: [{ key: 'amenity', value: 'restaurant' }, { key: 'cuisine', value: 'pizza' }] },
+  { tags: [{ key: 'amenity', value: 'fast_food' }, { key: 'cuisine', value: 'pizza' }] },
+]);
+
+const createFoodFilters = () => {
+  const filters = createFilters([
+    { key: 'amenity', values: ['restaurant', 'fast_food', 'cafe', 'bar'] },
+    { key: 'shop', values: ['bakery'] },
+  ]);
+
+  return filters;
+};
+
 export const getOpenDataFiltersForSegment = (segment) => {
-  const resolved = resolveSegmentQuery(segment) || String(segment || '');
+  const segmentRecord = resolveSegmentRecord(segment, { allowLooseFallback: true });
+  const resolved = segmentRecord?.label || resolveSegmentQuery(segment) || String(segment || '');
   const normalized = normalizeSegmentText(resolved);
 
-  if (containsAny(normalized, ['restaurante', 'gastronomia'])) {
-    return createFilters([
-      { key: 'amenity', values: ['restaurant', 'fast_food', 'cafe', 'bar'] },
-      { key: 'shop', values: ['bakery'] },
-    ]);
+  if (segmentRecord?.id === 'pizzaria') {
+    return createPizzaFilters();
   }
 
-  if (containsAny(normalized, ['alimentacao', 'food service'])) {
-    return createFilters([
-      { key: 'amenity', values: ['restaurant', 'fast_food', 'cafe', 'bar'] },
-      { key: 'shop', values: ['bakery', 'supermarket', 'convenience'] },
-    ]);
+  if (segmentRecord?.broadParent === 'alimentacao' || containsAny(normalized, ['restaurante', 'gastronomia', 'alimentacao', 'food service', 'pizza'])) {
+    const filters = createFoodFilters();
+
+    if (segmentRecord?.id === 'alimentacao_food_service' || segmentRecord?.id === 'restaurante_gastronomia') {
+      filters.push(
+        { key: 'shop', value: 'supermarket' },
+        { key: 'shop', value: 'convenience' }
+      );
+    }
+
+    return filters;
   }
 
   if (containsAny(normalized, ['supermercado', 'varejo', 'comercio'])) {
@@ -129,6 +151,8 @@ export const getOpenDataFiltersForSegment = (segment) => {
   if (containsAny(normalized, ['farmacia', 'drogaria'])) {
     return createFilters([
       { key: 'amenity', values: ['pharmacy'] },
+      { key: 'shop', values: ['chemist'] },
+      { key: 'healthcare', values: ['pharmacy'] },
     ]);
   }
 
@@ -301,9 +325,14 @@ export const buildOverpassQuery = (bbox, segment) => {
   const filters = getOpenDataFiltersForSegment(segment);
   const [south, west, north, east] = bbox;
 
-  const statements = filters.map(({ key, value }) =>
-    `  nwr["${escapeOverpassValue(key)}"="${escapeOverpassValue(value)}"](${south},${west},${north},${east});`
-  );
+  const statements = filters.map((filter) => {
+    const tags = filter.tags || [{ key: filter.key, value: filter.value }];
+    const clause = tags
+      .map(({ key, value }) => `["${escapeOverpassValue(key)}"="${escapeOverpassValue(value)}"]`)
+      .join('');
+
+    return `  nwr${clause}(${south},${west},${north},${east});`;
+  });
 
   return [
     '[out:json][timeout:30];',
@@ -340,6 +369,12 @@ export const buildNominatimRequest = (location) => {
 
   return `${NOMINATIM_ENDPOINT}?${params.toString()}`;
 };
+
+export const buildOpenDataRequestHeaders = () => ({
+  'User-Agent': OPEN_DATA_USER_AGENT,
+  'From': 'bloom-leads@localhost',
+  'Accept-Language': OPEN_DATA_ACCEPT_LANGUAGE,
+});
 
 const parseLocationParts = (location, nominatimResult) => {
   const raw = String(location || '').trim();
@@ -427,7 +462,7 @@ export const mapOpenDataElementToCompany = (element, locationInfo, segment) => {
     id: `${OPEN_DATA_SOURCE}-${element?.type || 'item'}-${element?.id || businessName}-${normalizeSegmentText(businessName)}`,
     sourceId: element?.id ? String(element.id) : undefined,
     cnpj: '',
-    razão_social: legalName,
+    razao_social: legalName,
     nome_fantasia: businessName,
     endereco: formatAddress(tags, locationInfo),
     cidade: city,
@@ -460,6 +495,12 @@ export const mapOpenDataElementToCompany = (element, locationInfo, segment) => {
     status: 'NEW',
     score: computeScore(tags),
     source: OPEN_DATA_SOURCE,
+    provenance: {
+      source: OPEN_DATA_SOURCE,
+      osmTags: tags,
+      searchSegment: segment,
+      location: locationInfo,
+    },
     googleMapsUri: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${businessName}, ${formatAddress(tags, locationInfo)}`)}`,
     socials: {
       instagram: getTag(tags, ['contact:instagram']) || undefined,
@@ -500,7 +541,10 @@ export const fetchOpenDataLeads = async (
   fetchImpl = fetch
 ) => {
   const nominatimUrl = buildNominatimRequest(location);
-  const geocodes = await fetchJson(fetchImpl, nominatimUrl);
+  const openDataHeaders = buildOpenDataRequestHeaders();
+  const geocodes = await fetchJson(fetchImpl, nominatimUrl, {
+    headers: openDataHeaders,
+  });
 
   if (!Array.isArray(geocodes) || geocodes.length === 0) {
     return [];
@@ -524,6 +568,7 @@ export const fetchOpenDataLeads = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      ...openDataHeaders,
     },
     body: overpassBody,
   });
@@ -543,5 +588,5 @@ export const fetchOpenDataLeads = async (
       return a.nome_fantasia.localeCompare(b.nome_fantasia);
     });
 
-  return dedupeCompanies(companies).slice(0, quantity);
+  return filterLeadsBySegment(dedupeCompanies(companies), segment).slice(0, quantity);
 };

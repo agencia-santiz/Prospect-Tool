@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS deals (
   priority text NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
   next_step text,
   notes text,
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

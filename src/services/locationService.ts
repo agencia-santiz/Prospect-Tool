@@ -1,4 +1,6 @@
 
+import { readPersistentValue, writePersistentValue } from '../utils/persistentStorage.js';
+
 interface IBGEMunicipality {
   id: number;
   nome: string;
@@ -36,7 +38,7 @@ const FALLBACK_CITIES: CityOption[] = [
 
 export const fetchBrazilianCities = async (): Promise<CityOption[]> => {
   // Check local storage first
-  const cached = localStorage.getItem(CACHE_KEY);
+  const cached = readPersistentValue(CACHE_KEY);
   if (cached) {
     // console.log("Loaded cities from cache");
     return JSON.parse(cached);
@@ -96,7 +98,7 @@ export const fetchBrazilianCities = async (): Promise<CityOption[]> => {
     }
 
     // Cache the result
-    localStorage.setItem(CACHE_KEY, JSON.stringify(uniqueOptions));
+    writePersistentValue(CACHE_KEY, JSON.stringify(uniqueOptions));
     
     return uniqueOptions;
   } catch (error) {

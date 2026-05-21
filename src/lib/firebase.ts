@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getDataConnect } from 'firebase/data-connect';
+import { getDataConnect, setLogLevel } from 'firebase/data-connect';
 import { getFirestore } from 'firebase/firestore';
 import { connectorConfig } from '@dataconnect/generated';
 
@@ -14,6 +14,7 @@ const firebaseConfig = {
 };
 
 const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => typeof value === 'string' && value.trim().length > 0);
+export const isDataConnectSyncEnabled = import.meta.env.VITE_ENABLE_DATACONNECT_SYNC === 'true';
 
 export const isFirebaseConfigured = hasFirebaseConfig;
 
@@ -23,6 +24,8 @@ export const firebaseApp = hasFirebaseConfig
 
 export const firebaseAuth = firebaseApp ? getAuth(firebaseApp) : null;
 export const firebaseDb = firebaseApp ? getFirestore(firebaseApp) : null;
-export const firebaseDataConnect = firebaseApp ? getDataConnect(connectorConfig) : null;
+export const firebaseDataConnect = firebaseApp && isDataConnectSyncEnabled ? getDataConnect(connectorConfig) : null;
+
+setLogLevel(isDataConnectSyncEnabled ? 'error' : 'silent');
 
 export const firebaseClientConfig = firebaseConfig;

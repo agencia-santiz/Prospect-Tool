@@ -48,6 +48,7 @@ A jornada central de busca, organizacao e acompanhamento ja esta funcional.
 - O backend antigo de auth ficou legada e nao e mais a fonte de verdade do login.
 - Se o provedor Email/Senha do Firebase Auth ainda nao estiver habilitado, o app usa fallback legado para manter o MVP acessivel.
 - Existe bootstrap automatico de usuario e workspace no Data Connect na primeira entrada.
+- A sincronizacao com Firebase Data Connect agora e opt-in via `VITE_ENABLE_DATACONNECT_SYNC=true`; sem esse flag, o app opera em modo local/seguro e evita requests 404 para conectores nao provisionados.
 - Cada usuario autenticado recebe um workspace proprio com membership e role.
 - O frontend ja tem o SDK do Firebase preparado em `src/lib/firebase.ts` e espera as variaveis `VITE_FIREBASE_*` no ambiente para a autenticacao e o Firestore.
 
@@ -59,6 +60,7 @@ A jornada central de busca, organizacao e acompanhamento ja esta funcional.
 - Carregamento incremental de resultados.
 - Filtro local por nome da empresa ou razao social.
 - Alternancia entre grade e lista.
+- No modo grade, o card de lead abre uma janela flutuante com mais dados sem expandir a lista.
 
 ### 3. Organizacao comercial
 
@@ -66,7 +68,9 @@ A jornada central de busca, organizacao e acompanhamento ja esta funcional.
 - Reabertura de listas salvas.
 - Marcacao de contatos como contatados.
 - Base global de contatos, alimentada a partir dos saves.
-- Exportacao exibida na interface, ainda sem exportacao real de arquivo.
+- Exportacao em CSV via backend, com download real do arquivo.
+- A confirmacao de WhatsApp agora usa um dropdown de status apenas no modal de detalhes da lead, com as opcoes `confirmado`, `nao confirmado` e `sem WhatsApp`, e fica salva localmente no navegador.
+- O modal de detalhes tambem exibe um botao de Instagram quando existe link cadastrado em `socials.instagram`.
 
 ### 4. Pipeline / CRM
 
@@ -81,7 +85,7 @@ A jornada central de busca, organizacao e acompanhamento ja esta funcional.
 - Modal de configuracao de visualizacao dos cards do pipeline.
 - Edicao do nome do pipeline e das etapas.
 - Adicao e remocao de etapas no pipeline.
-- Modal de pricing com simulacao de upgrade.
+- Modal de pricing com estado real do workspace e catalogo de planos.
 - Sistema de idioma da interface.
 - Loading visual durante a busca.
 - Shell de modal reutilizavel.
@@ -139,7 +143,7 @@ A jornada central de busca, organizacao e acompanhamento ja esta funcional.
 
 1. O usuario entra na tela de login.
 2. O login e validado no backend.
-3. O app carrega cidades, listas, contatos, pipeline, deals e configuracoes do `localStorage`.
+3. O app carrega cidades e restaura `savedLists`, contatos, pipeline e deals do `localStorage` por workspace.
 4. O usuario informa cidade e segmento.
 5. O app sugere cidades e segmentos.
 6. O usuario executa a busca.
@@ -249,6 +253,8 @@ Passos:
 8. Ordena por score heuristico.
 9. Retorna no maximo a quantidade pedida.
 
+Quando a quantidade pedida e alta, o backend passa o valor completo para as fontes que suportam lotes maiores; quando a quantidade e baixa, ele usa uma pequena folga interna para evitar que o resultado volte uma unidade abaixo por causa de filtro e dedupe.
+
 O mapeamento tenta recuperar:
 
 - nome fantasia
@@ -345,6 +351,7 @@ Isso significa que o valor esperado no `.env.local` e `GEMINI_API_KEY`, mesmo qu
 ## Persistencia local
 
 Hoje o `localStorage` continua como apoio operacional do MVP, mas a sessao agora depende do backend.
+As areas de lista, contatos, pipeline e deals sao persistidas localmente por workspace e nao dependem mais do Data Connect para operacao diaria.
 
 | Chave | Conteudo |
 | --- | --- |
@@ -388,7 +395,7 @@ O menu lateral exposto hoje contem:
 - `DealDetailsModal` concentra edicao rica do negocio.
 - `SelectListModal` permite salvar em lista existente ou criar nova.
 - `AddToPipelineModal` escolhe o pipeline ao criar um deal.
-- `PricingModal` simula upgrade.
+- `PricingModal` mostra o plano real do workspace e o catalogo de planos.
 - `SettingsModal` ajusta visual e etapas do pipeline.
 - `ModalShell` padroniza overlay, foco e Escape.
 
@@ -432,10 +439,10 @@ Algumas partes sao reais no fluxo local, mas ainda nao representam backend de pr
 
 ### Simulados hoje
 
-- upgrade de plano
-- processamento de pagamento
+- visualizacao do plano real
+- checkout ainda nao conectado
 - limite mensal de uso como regra de produto real
-- exportacao de arquivo
+- exportacao de arquivo real
 - criacao rapida de negocio a partir do quadro quando o atalho aponta de volta para a exploracao
 - revelacao de email dentro do `DealDetailsModal`
 
@@ -459,8 +466,8 @@ Algumas partes sao reais no fluxo local, mas ainda nao representam backend de pr
 - O workspace atual ja e resolvido pelo Data Connect, mas a UI ainda nao exibe todos os detalhes de membros.
 - O Firebase ja esta configurado como base de infraestrutura no frontend e a sessao ja esta em Firebase Auth.
 - Nao existe persistencia em banco de dados.
-- A tela de pricing e uma simulacao.
-- O export ainda nao gera arquivo.
+- A tela de pricing mostra o plano real do workspace.
+- O export gera arquivo CSV real via backend.
 - Alguns textos e doc de arquitetura usam linguagem de visao futura; isso nao significa que o runtime ja tenha essa integracao.
 - A busca aberta depende da disponibilidade das APIs publicas.
 - A busca Gemini depende da chave configurada no ambiente.
@@ -501,6 +508,7 @@ Algumas partes sao reais no fluxo local, mas ainda nao representam backend de pr
 - `RESUMO_DO_PROJETO.md` resume o estado do MVP.
 - `ROADMAP_TECNICO.md` consolida a evolucao planejada em fases.
 - `bloom_leads_pesquisa_tecnica_estrategica.md` e a base analitica da mudanca de direcao.
+- `FLUXO_LEAD_PIPELINE_KANBAN.md` detalha o caminho entre lead, deal e Kanban.
 - `DESIGN.md` detalha a proposta visual.
 - `DESIGN_SYSTEM.md` organiza tokens e componentes visuais.
 - `DECISION_LOG.md` registra decisoes importantes.

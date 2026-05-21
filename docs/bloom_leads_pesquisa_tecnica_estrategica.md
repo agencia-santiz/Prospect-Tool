@@ -1522,7 +1522,7 @@ Exportação passa a gerar arquivo real
 
 ```txt
 Login mock em produção
-Plano/pricing mock em produção
+  Plano/pricing real do workspace
 Export falso
 Dependência de prompt para achar empresas
 Chaves de API no frontend

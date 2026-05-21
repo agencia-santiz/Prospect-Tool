@@ -1,9 +1,18 @@
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8787';
+import { getBackendBaseUrl } from '../utils/backendUrl.js';
+
+const BACKEND_BASE_URL = getBackendBaseUrl();
+
+export type FeedbackType = 'bom_lead' | 'duplicado' | 'fora_cidade' | 'fora_segmento' | 'sem_contato';
 
 export const sendLeadFeedback = async (
   leadId: string,
-  feedbackType: 'bom_lead' | 'duplicado' | 'fora_cidade' | 'fora_segmento' | 'sem_contato',
-  searchId?: string
+  feedbackType: FeedbackType,
+  context?: {
+    companyName?: string;
+    segment?: string;
+    city?: string;
+    searchId?: string;
+  }
 ): Promise<boolean> => {
   try {
     const response = await fetch(`${BACKEND_BASE_URL}/search/feedback`, {
@@ -14,7 +23,10 @@ export const sendLeadFeedback = async (
       body: JSON.stringify({
         leadId,
         feedbackType,
-        searchId,
+        companyName: context?.companyName || '',
+        segment: context?.segment || '',
+        city: context?.city || '',
+        searchId: context?.searchId || '',
       }),
     });
 

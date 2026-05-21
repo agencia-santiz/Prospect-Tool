@@ -1,0 +1,12 @@
+.git
+.github
+.playwright-cli
+.env
+.env.*
+dist
+node_modules
+output
+*.log
+README.md
+docs
+tests

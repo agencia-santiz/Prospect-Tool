@@ -1,11 +1,20 @@
 {
   "name": "bloom-leads",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.4",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "backend": "node server/index.js",
+    "start": "node server/index.js",
+    "desktop:dev": "node scripts/desktop-dev.mjs",
+    "desktop:run": "electron desktop/main.js",
+    "desktop:pack": "npm run build && electron-builder --dir",
+    "desktop:installer": "npm run build && electron-builder --win nsis --x64",
+    "desktop:feed:stage": "node scripts/desktop-feed.mjs stage",
+    "desktop:feed:serve": "node scripts/desktop-feed.mjs serve",
+    "desktop:release:smoke": "node scripts/desktop-release-smoke.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -13,20 +22,62 @@
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "@google/genai": "^1.30.0",
     "clsx": "^2.1.1",
+    "electron-updater": "^6.8.3",
     "firebase": "^12.12.1",
+    "firebase-functions": "^7.2.5",
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.5.0"
   },
+  "engines": {
+    "node": "22"
+  },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.5.0",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "postcss": "^8.5.12",
     "tailwindcss": "^4.2.4",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "build": {
+    "appId": "com.bloomleads.desktop",
+    "productName": "Bloom Leads",
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "assets/**/*",
+      "desktop/**/*",
+      "server/**/*",
+      "src/**/*",
+      "dist/**/*",
+      "build/**/*",
+      "index.js",
+      "package.json"
+    ],
+    "icon": "assets/app-icon.png",
+    "extraMetadata": {
+      "main": "desktop/main.js"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

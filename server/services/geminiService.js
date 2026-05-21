@@ -1,4 +1,8 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
+import { SEGMENT_DATABASE } from '../../src/utils/segmentDatabase.js';
+
+const ALLOWED_SEGMENTS = SEGMENT_DATABASE.map(s => s.label);
+
 
 const generateUUID = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -80,7 +84,7 @@ export const createGeminiLeadService = (env = process.env) => {
         - If it's broad like "Lanche", return "Lanchonetes, Hamburguerias, Fast Food, Hot Dogs, Cafeterias, Salgaderias".
         - Return ONLY the list of synonyms separated by commas.
         - No intro, no explanations.
-        - Max 6 synonyms.
+        - Max 12 synonyms.
       `;
 
       const response = await ai.models.generateContent({
@@ -122,26 +126,38 @@ export const createGeminiLeadService = (env = process.env) => {
       1. USE 'googleMaps' to search. This is mandatory.
       2. List businesses found. If exact category matches are low, include closely related businesses.
       3. ${exclusionPrompt}
-
-      OUTPUT FORMAT:
-      Return strictly a JSON ARRAY of objects. No intro text.
-
-      JSON Object Structure:
-      {
-        "nome_fantasia": "Business Name",
-        "endereco": "Full Address",
-        "telefone": "Phone (or null)",
-        "website": "Website URL (or null)",
-        "atividade": "Primary Category",
-        "horario_funcionamento": "e.g., Seg-Sex 08-18h (or null)",
-        "aberto_agora": true/false,
-        "google_maps_url": "Direct link to the place on Google Maps"
-      }
-
+      
       Important:
       - Do not invent data. Use real Maps data.
+      - If available in Google Maps, include the place rating and review count.
       - If you find fewer than ${resolvedQuantity}, return all you found.
     `;
+
+    const responseSchema = {
+      type: Type.ARRAY,
+      description: 'List of B2B leads found in Google Maps.',
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          nome_fantasia: { type: Type.STRING, description: 'Business Name' },
+          endereco: { type: Type.STRING, description: 'Full Address' },
+          telefone: { type: Type.STRING, description: 'Phone (or null)', nullable: true },
+          website: { type: Type.STRING, description: 'Website URL (or null)', nullable: true },
+          atividade: { 
+            type: Type.STRING, 
+            description: 'Primary Category from our official taxonomy.',
+            enum: ALLOWED_SEGMENTS
+          },
+          horario_funcionamento: { type: Type.STRING, description: 'e.g., Seg-Sex 08-18h (or null)', nullable: true },
+          aberto_agora: { type: Type.BOOLEAN, nullable: true },
+          rating: { type: Type.NUMBER, description: 'Google rating from 0 to 5 (or null)', nullable: true },
+          userRatingsTotal: { type: Type.INTEGER, description: 'Total number of Google reviews (or null)', nullable: true },
+          google_maps_url: { type: Type.STRING, description: 'Direct link to the place on Google Maps' },
+          resumo_relevancia: { type: Type.STRING, description: 'A short sentence explaining why this lead is relevant for the target segment, including any specific evidence like rating, popularity or services.' }
+        },
+        required: ['nome_fantasia', 'endereco', 'atividade', 'google_maps_url', 'resumo_relevancia']
+      }
+    };
 
     try {
       const response = await ai.models.generateContent({
@@ -150,14 +166,15 @@ export const createGeminiLeadService = (env = process.env) => {
         config: {
           tools: [{ googleMaps: {} }],
           temperature: 0.5,
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema
         },
       });
 
-      const cleanText = cleanJson(response.text || '');
       let rawData = [];
 
       try {
-        rawData = JSON.parse(cleanText);
+        rawData = JSON.parse(response.text || '[]');
       } catch (parseError) {
         console.warn('Failed to parse JSON from Gemini, raw text snippet:', response.text?.substring(0, 100));
         return [];
@@ -207,6 +224,9 @@ export const createGeminiLeadService = (env = process.env) => {
           status: 'NEW',
           source: 'GOOGLE_MAPS',
           score: 85,
+          rating: typeof item.rating === 'number' ? item.rating : undefined,
+          userRatingsTotal: Number.isFinite(Number(item.userRatingsTotal)) ? Number(item.userRatingsTotal) : undefined,
+          relevance_summary: item.resumo_relevancia || `Possível oportunidade para ${resolvedSegment} em ${cityStr}.`,
           googleMapsUri: item.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.nome_fantasia}, ${item.endereco || cityStr}`)}`,
           socials: {
             linkedin: undefined,

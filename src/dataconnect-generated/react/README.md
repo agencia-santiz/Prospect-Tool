@@ -24,9 +24,25 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ListPipelineOverview*](#listpipelineoverview)
   - [*ListPipelineStages*](#listpipelinestages)
   - [*ListContactsByWorkspace*](#listcontactsbyworkspace)
+  - [*ListLeadsByWorkspace*](#listleadsbyworkspace)
   - [*ListDealsByWorkspace*](#listdealsbyworkspace)
+  - [*ListUsageEventsByWorkspace*](#listusageeventsbyworkspace)
+  - [*ListQueuedEnrichmentJobs*](#listqueuedenrichmentjobs)
+  - [*ListStaleDeals*](#liststaledeals)
 - [**Mutations**](#mutations)
   - [*BootstrapWorkspace*](#bootstrapworkspace)
+  - [*CreateSavedList*](#createsavedlist)
+  - [*UpsertCompany*](#upsertcompany)
+  - [*UpsertLead*](#upsertlead)
+  - [*AddLeadToSavedList*](#addleadtosavedlist)
+  - [*DeleteSavedList*](#deletesavedlist)
+  - [*UpsertPipeline*](#upsertpipeline)
+  - [*UpsertPipelineStage*](#upsertpipelinestage)
+  - [*UpsertDeal*](#upsertdeal)
+  - [*DeleteDeal*](#deletedeal)
+  - [*CreateUsageEvent*](#createusageevent)
+  - [*UpsertEnrichmentJob*](#upsertenrichmentjob)
+  - [*UpdateEnrichmentJobStatus*](#updateenrichmentjobstatus)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `example`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -451,6 +467,24 @@ export interface ListSavedListsData {
         segmentRaw: string;
         status: string;
       } & Search_Key;
+        savedListItems_on_list: ({
+          lead: {
+            id: UUIDString;
+            status: string;
+            company: {
+              id: UUIDString;
+              legalName: string;
+              tradeName: string;
+              segment: string;
+              city: string;
+              region: string;
+              country: string;
+              phone?: string | null;
+              website?: string | null;
+              score: number;
+            } & Company_Key;
+          } & Lead_Key;
+        })[];
   } & SavedList_Key)[];
 }
 ```
@@ -539,6 +573,14 @@ export interface ListPipelineOverviewData {
     isDefault: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
+    stages: ({
+      id: UUIDString;
+      name: string;
+      sortOrder: number;
+      color?: string | null;
+      createdAt: TimestampString;
+      updatedAt: TimestampString;
+    } & PipelineStage_Key)[];
   } & Pipeline_Key)[];
 }
 ```
@@ -782,6 +824,107 @@ export default function ListContactsByWorkspaceComponent() {
 }
 ```
 
+## ListLeadsByWorkspace
+You can execute the `ListLeadsByWorkspace` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListLeadsByWorkspace(dc: DataConnect, vars: ListLeadsByWorkspaceVariables, options?: useDataConnectQueryOptions<ListLeadsByWorkspaceData>): UseDataConnectQueryResult<ListLeadsByWorkspaceData, ListLeadsByWorkspaceVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListLeadsByWorkspace(vars: ListLeadsByWorkspaceVariables, options?: useDataConnectQueryOptions<ListLeadsByWorkspaceData>): UseDataConnectQueryResult<ListLeadsByWorkspaceData, ListLeadsByWorkspaceVariables>;
+```
+
+### Variables
+The `ListLeadsByWorkspace` Query requires an argument of type `ListLeadsByWorkspaceVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListLeadsByWorkspaceVariables {
+  workspaceId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ListLeadsByWorkspace` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListLeadsByWorkspace` Query is of type `ListLeadsByWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListLeadsByWorkspaceData {
+  leads: ({
+    id: UUIDString;
+    status: string;
+    rank: number;
+    score: number;
+    reason?: string | null;
+    source?: string | null;
+    company: {
+      id: UUIDString;
+      legalName: string;
+      tradeName: string;
+      segment: string;
+      city: string;
+      region: string;
+      country: string;
+      phone?: string | null;
+      website?: string | null;
+      score: number;
+    } & Company_Key;
+  } & Lead_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListLeadsByWorkspace`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListLeadsByWorkspaceVariables } from '@dataconnect/generated';
+import { useListLeadsByWorkspace } from '@dataconnect/generated/react'
+
+export default function ListLeadsByWorkspaceComponent() {
+  // The `useListLeadsByWorkspace` Query hook requires an argument of type `ListLeadsByWorkspaceVariables`:
+  const listLeadsByWorkspaceVars: ListLeadsByWorkspaceVariables = {
+    workspaceId: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListLeadsByWorkspace(listLeadsByWorkspaceVars);
+  // Variables can be defined inline as well.
+  const query = useListLeadsByWorkspace({ workspaceId: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListLeadsByWorkspace(dataConnect, listLeadsByWorkspaceVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListLeadsByWorkspace(listLeadsByWorkspaceVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListLeadsByWorkspace(dataConnect, listLeadsByWorkspaceVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.leads);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
 ## ListDealsByWorkspace
 You can execute the `ListDealsByWorkspace` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
 
@@ -816,6 +959,7 @@ export interface ListDealsByWorkspaceData {
     priority: string;
     nextStep?: string | null;
     notes?: string | null;
+    payload: unknown;
     createdAt: TimestampString;
     updatedAt: TimestampString;
     company?: {
@@ -879,6 +1023,280 @@ export default function ListDealsByWorkspaceComponent() {
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
   const query = useListDealsByWorkspace(dataConnect, listDealsByWorkspaceVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.deals);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ListUsageEventsByWorkspace
+You can execute the `ListUsageEventsByWorkspace` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListUsageEventsByWorkspace(dc: DataConnect, vars: ListUsageEventsByWorkspaceVariables, options?: useDataConnectQueryOptions<ListUsageEventsByWorkspaceData>): UseDataConnectQueryResult<ListUsageEventsByWorkspaceData, ListUsageEventsByWorkspaceVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListUsageEventsByWorkspace(vars: ListUsageEventsByWorkspaceVariables, options?: useDataConnectQueryOptions<ListUsageEventsByWorkspaceData>): UseDataConnectQueryResult<ListUsageEventsByWorkspaceData, ListUsageEventsByWorkspaceVariables>;
+```
+
+### Variables
+The `ListUsageEventsByWorkspace` Query requires an argument of type `ListUsageEventsByWorkspaceVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListUsageEventsByWorkspaceVariables {
+  workspaceId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ListUsageEventsByWorkspace` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListUsageEventsByWorkspace` Query is of type `ListUsageEventsByWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListUsageEventsByWorkspaceData {
+  usageEvents: ({
+    id: UUIDString;
+    eventType: string;
+    quantity: number;
+    occurredAt: TimestampString;
+  } & UsageEvent_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListUsageEventsByWorkspace`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListUsageEventsByWorkspaceVariables } from '@dataconnect/generated';
+import { useListUsageEventsByWorkspace } from '@dataconnect/generated/react'
+
+export default function ListUsageEventsByWorkspaceComponent() {
+  // The `useListUsageEventsByWorkspace` Query hook requires an argument of type `ListUsageEventsByWorkspaceVariables`:
+  const listUsageEventsByWorkspaceVars: ListUsageEventsByWorkspaceVariables = {
+    workspaceId: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListUsageEventsByWorkspace(listUsageEventsByWorkspaceVars);
+  // Variables can be defined inline as well.
+  const query = useListUsageEventsByWorkspace({ workspaceId: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListUsageEventsByWorkspace(dataConnect, listUsageEventsByWorkspaceVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListUsageEventsByWorkspace(listUsageEventsByWorkspaceVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListUsageEventsByWorkspace(dataConnect, listUsageEventsByWorkspaceVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.usageEvents);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ListQueuedEnrichmentJobs
+You can execute the `ListQueuedEnrichmentJobs` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListQueuedEnrichmentJobs(dc: DataConnect, vars: ListQueuedEnrichmentJobsVariables, options?: useDataConnectQueryOptions<ListQueuedEnrichmentJobsData>): UseDataConnectQueryResult<ListQueuedEnrichmentJobsData, ListQueuedEnrichmentJobsVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListQueuedEnrichmentJobs(vars: ListQueuedEnrichmentJobsVariables, options?: useDataConnectQueryOptions<ListQueuedEnrichmentJobsData>): UseDataConnectQueryResult<ListQueuedEnrichmentJobsData, ListQueuedEnrichmentJobsVariables>;
+```
+
+### Variables
+The `ListQueuedEnrichmentJobs` Query requires an argument of type `ListQueuedEnrichmentJobsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListQueuedEnrichmentJobsVariables {
+  workspaceId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ListQueuedEnrichmentJobs` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListQueuedEnrichmentJobs` Query is of type `ListQueuedEnrichmentJobsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListQueuedEnrichmentJobsData {
+  enrichmentJobs: ({
+    id: UUIDString;
+    jobType: string;
+    companyId?: UUIDString | null;
+    payload: unknown;
+    attempts: number;
+  } & EnrichmentJob_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListQueuedEnrichmentJobs`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListQueuedEnrichmentJobsVariables } from '@dataconnect/generated';
+import { useListQueuedEnrichmentJobs } from '@dataconnect/generated/react'
+
+export default function ListQueuedEnrichmentJobsComponent() {
+  // The `useListQueuedEnrichmentJobs` Query hook requires an argument of type `ListQueuedEnrichmentJobsVariables`:
+  const listQueuedEnrichmentJobsVars: ListQueuedEnrichmentJobsVariables = {
+    workspaceId: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListQueuedEnrichmentJobs(listQueuedEnrichmentJobsVars);
+  // Variables can be defined inline as well.
+  const query = useListQueuedEnrichmentJobs({ workspaceId: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListQueuedEnrichmentJobs(dataConnect, listQueuedEnrichmentJobsVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListQueuedEnrichmentJobs(listQueuedEnrichmentJobsVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListQueuedEnrichmentJobs(dataConnect, listQueuedEnrichmentJobsVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.enrichmentJobs);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ListStaleDeals
+You can execute the `ListStaleDeals` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListStaleDeals(dc: DataConnect, vars: ListStaleDealsVariables, options?: useDataConnectQueryOptions<ListStaleDealsData>): UseDataConnectQueryResult<ListStaleDealsData, ListStaleDealsVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListStaleDeals(vars: ListStaleDealsVariables, options?: useDataConnectQueryOptions<ListStaleDealsData>): UseDataConnectQueryResult<ListStaleDealsData, ListStaleDealsVariables>;
+```
+
+### Variables
+The `ListStaleDeals` Query requires an argument of type `ListStaleDealsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListStaleDealsVariables {
+  workspaceId: UUIDString;
+  staleDate: TimestampString;
+}
+```
+### Return Type
+Recall that calling the `ListStaleDeals` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListStaleDeals` Query is of type `ListStaleDealsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListStaleDealsData {
+  deals: ({
+    id: UUIDString;
+    company?: {
+      id: UUIDString;
+    } & Company_Key;
+      pipeline: {
+        id: UUIDString;
+      } & Pipeline_Key;
+        stage: {
+          id: UUIDString;
+        } & PipelineStage_Key;
+          title: string;
+          value?: number | null;
+          priority: string;
+          payload: unknown;
+  } & Deal_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListStaleDeals`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListStaleDealsVariables } from '@dataconnect/generated';
+import { useListStaleDeals } from '@dataconnect/generated/react'
+
+export default function ListStaleDealsComponent() {
+  // The `useListStaleDeals` Query hook requires an argument of type `ListStaleDealsVariables`:
+  const listStaleDealsVars: ListStaleDealsVariables = {
+    workspaceId: ..., 
+    staleDate: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListStaleDeals(listStaleDealsVars);
+  // Variables can be defined inline as well.
+  const query = useListStaleDeals({ workspaceId: ..., staleDate: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListStaleDeals(dataConnect, listStaleDealsVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListStaleDeals(listStaleDealsVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListStaleDeals(dataConnect, listStaleDealsVars, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {
@@ -1021,6 +1439,1230 @@ export default function BootstrapWorkspaceComponent() {
     console.log(mutation.data.user_insert);
     console.log(mutation.data.workspace_insert);
     console.log(mutation.data.workspaceMember_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CreateSavedList
+You can execute the `CreateSavedList` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCreateSavedList(options?: useDataConnectMutationOptions<CreateSavedListData, FirebaseError, CreateSavedListVariables>): UseDataConnectMutationResult<CreateSavedListData, CreateSavedListVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCreateSavedList(dc: DataConnect, options?: useDataConnectMutationOptions<CreateSavedListData, FirebaseError, CreateSavedListVariables>): UseDataConnectMutationResult<CreateSavedListData, CreateSavedListVariables>;
+```
+
+### Variables
+The `CreateSavedList` Mutation requires an argument of type `CreateSavedListVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CreateSavedListVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  name: string;
+}
+```
+### Return Type
+Recall that calling the `CreateSavedList` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSavedList` Mutation is of type `CreateSavedListData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CreateSavedListData {
+  savedList_insert: SavedList_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CreateSavedList`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CreateSavedListVariables } from '@dataconnect/generated';
+import { useCreateSavedList } from '@dataconnect/generated/react'
+
+export default function CreateSavedListComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCreateSavedList();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCreateSavedList(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSavedList(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSavedList(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCreateSavedList` Mutation requires an argument of type `CreateSavedListVariables`:
+  const createSavedListVars: CreateSavedListVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    name: ..., 
+  };
+  mutation.mutate(createSavedListVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., name: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(createSavedListVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.savedList_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertCompany
+You can execute the `UpsertCompany` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertCompany(options?: useDataConnectMutationOptions<UpsertCompanyData, FirebaseError, UpsertCompanyVariables>): UseDataConnectMutationResult<UpsertCompanyData, UpsertCompanyVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertCompany(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertCompanyData, FirebaseError, UpsertCompanyVariables>): UseDataConnectMutationResult<UpsertCompanyData, UpsertCompanyVariables>;
+```
+
+### Variables
+The `UpsertCompany` Mutation requires an argument of type `UpsertCompanyVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertCompanyVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  legalName: string;
+  tradeName: string;
+  segment: string;
+  city: string;
+  region: string;
+  country: string;
+  phone?: string | null;
+  website?: string | null;
+}
+```
+### Return Type
+Recall that calling the `UpsertCompany` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertCompany` Mutation is of type `UpsertCompanyData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertCompanyData {
+  company_upsert: Company_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertCompany`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertCompanyVariables } from '@dataconnect/generated';
+import { useUpsertCompany } from '@dataconnect/generated/react'
+
+export default function UpsertCompanyComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertCompany();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertCompany(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertCompany(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertCompany(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertCompany` Mutation requires an argument of type `UpsertCompanyVariables`:
+  const upsertCompanyVars: UpsertCompanyVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    legalName: ..., 
+    tradeName: ..., 
+    segment: ..., 
+    city: ..., 
+    region: ..., 
+    country: ..., 
+    phone: ..., // optional
+    website: ..., // optional
+  };
+  mutation.mutate(upsertCompanyVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., legalName: ..., tradeName: ..., segment: ..., city: ..., region: ..., country: ..., phone: ..., website: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertCompanyVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.company_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertLead
+You can execute the `UpsertLead` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertLead(options?: useDataConnectMutationOptions<UpsertLeadData, FirebaseError, UpsertLeadVariables>): UseDataConnectMutationResult<UpsertLeadData, UpsertLeadVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertLead(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertLeadData, FirebaseError, UpsertLeadVariables>): UseDataConnectMutationResult<UpsertLeadData, UpsertLeadVariables>;
+```
+
+### Variables
+The `UpsertLead` Mutation requires an argument of type `UpsertLeadVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertLeadVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  companyId: UUIDString;
+  status: string;
+  rank: number;
+  score: number;
+  source?: string | null;
+}
+```
+### Return Type
+Recall that calling the `UpsertLead` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertLead` Mutation is of type `UpsertLeadData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertLeadData {
+  lead_upsert: Lead_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertLead`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertLeadVariables } from '@dataconnect/generated';
+import { useUpsertLead } from '@dataconnect/generated/react'
+
+export default function UpsertLeadComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertLead();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertLead(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertLead(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertLead(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertLead` Mutation requires an argument of type `UpsertLeadVariables`:
+  const upsertLeadVars: UpsertLeadVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    companyId: ..., 
+    status: ..., 
+    rank: ..., 
+    score: ..., 
+    source: ..., // optional
+  };
+  mutation.mutate(upsertLeadVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., companyId: ..., status: ..., rank: ..., score: ..., source: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertLeadVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.lead_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AddLeadToSavedList
+You can execute the `AddLeadToSavedList` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAddLeadToSavedList(options?: useDataConnectMutationOptions<AddLeadToSavedListData, FirebaseError, AddLeadToSavedListVariables>): UseDataConnectMutationResult<AddLeadToSavedListData, AddLeadToSavedListVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAddLeadToSavedList(dc: DataConnect, options?: useDataConnectMutationOptions<AddLeadToSavedListData, FirebaseError, AddLeadToSavedListVariables>): UseDataConnectMutationResult<AddLeadToSavedListData, AddLeadToSavedListVariables>;
+```
+
+### Variables
+The `AddLeadToSavedList` Mutation requires an argument of type `AddLeadToSavedListVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AddLeadToSavedListVariables {
+  listId: UUIDString;
+  leadId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `AddLeadToSavedList` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AddLeadToSavedList` Mutation is of type `AddLeadToSavedListData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AddLeadToSavedListData {
+  savedListItem_upsert: SavedListItem_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AddLeadToSavedList`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AddLeadToSavedListVariables } from '@dataconnect/generated';
+import { useAddLeadToSavedList } from '@dataconnect/generated/react'
+
+export default function AddLeadToSavedListComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAddLeadToSavedList();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAddLeadToSavedList(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAddLeadToSavedList(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAddLeadToSavedList(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAddLeadToSavedList` Mutation requires an argument of type `AddLeadToSavedListVariables`:
+  const addLeadToSavedListVars: AddLeadToSavedListVariables = {
+    listId: ..., 
+    leadId: ..., 
+  };
+  mutation.mutate(addLeadToSavedListVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ listId: ..., leadId: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(addLeadToSavedListVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.savedListItem_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## DeleteSavedList
+You can execute the `DeleteSavedList` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useDeleteSavedList(options?: useDataConnectMutationOptions<DeleteSavedListData, FirebaseError, DeleteSavedListVariables>): UseDataConnectMutationResult<DeleteSavedListData, DeleteSavedListVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useDeleteSavedList(dc: DataConnect, options?: useDataConnectMutationOptions<DeleteSavedListData, FirebaseError, DeleteSavedListVariables>): UseDataConnectMutationResult<DeleteSavedListData, DeleteSavedListVariables>;
+```
+
+### Variables
+The `DeleteSavedList` Mutation requires an argument of type `DeleteSavedListVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface DeleteSavedListVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `DeleteSavedList` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `DeleteSavedList` Mutation is of type `DeleteSavedListData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface DeleteSavedListData {
+  savedList_delete?: SavedList_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `DeleteSavedList`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, DeleteSavedListVariables } from '@dataconnect/generated';
+import { useDeleteSavedList } from '@dataconnect/generated/react'
+
+export default function DeleteSavedListComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useDeleteSavedList();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useDeleteSavedList(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDeleteSavedList(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDeleteSavedList(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useDeleteSavedList` Mutation requires an argument of type `DeleteSavedListVariables`:
+  const deleteSavedListVars: DeleteSavedListVariables = {
+    id: ..., 
+  };
+  mutation.mutate(deleteSavedListVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(deleteSavedListVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.savedList_delete);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertPipeline
+You can execute the `UpsertPipeline` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertPipeline(options?: useDataConnectMutationOptions<UpsertPipelineData, FirebaseError, UpsertPipelineVariables>): UseDataConnectMutationResult<UpsertPipelineData, UpsertPipelineVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertPipeline(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertPipelineData, FirebaseError, UpsertPipelineVariables>): UseDataConnectMutationResult<UpsertPipelineData, UpsertPipelineVariables>;
+```
+
+### Variables
+The `UpsertPipeline` Mutation requires an argument of type `UpsertPipelineVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertPipelineVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  name: string;
+  isDefault?: boolean | null;
+}
+```
+### Return Type
+Recall that calling the `UpsertPipeline` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertPipeline` Mutation is of type `UpsertPipelineData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertPipelineData {
+  pipeline_upsert: Pipeline_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertPipeline`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertPipelineVariables } from '@dataconnect/generated';
+import { useUpsertPipeline } from '@dataconnect/generated/react'
+
+export default function UpsertPipelineComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertPipeline();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertPipeline(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertPipeline(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertPipeline(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertPipeline` Mutation requires an argument of type `UpsertPipelineVariables`:
+  const upsertPipelineVars: UpsertPipelineVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    name: ..., 
+    isDefault: ..., // optional
+  };
+  mutation.mutate(upsertPipelineVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., name: ..., isDefault: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertPipelineVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.pipeline_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertPipelineStage
+You can execute the `UpsertPipelineStage` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertPipelineStage(options?: useDataConnectMutationOptions<UpsertPipelineStageData, FirebaseError, UpsertPipelineStageVariables>): UseDataConnectMutationResult<UpsertPipelineStageData, UpsertPipelineStageVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertPipelineStage(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertPipelineStageData, FirebaseError, UpsertPipelineStageVariables>): UseDataConnectMutationResult<UpsertPipelineStageData, UpsertPipelineStageVariables>;
+```
+
+### Variables
+The `UpsertPipelineStage` Mutation requires an argument of type `UpsertPipelineStageVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertPipelineStageVariables {
+  id: UUIDString;
+  pipelineId: UUIDString;
+  name: string;
+  sortOrder: number;
+  color: string;
+}
+```
+### Return Type
+Recall that calling the `UpsertPipelineStage` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertPipelineStage` Mutation is of type `UpsertPipelineStageData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertPipelineStageData {
+  pipelineStage_upsert: PipelineStage_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertPipelineStage`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertPipelineStageVariables } from '@dataconnect/generated';
+import { useUpsertPipelineStage } from '@dataconnect/generated/react'
+
+export default function UpsertPipelineStageComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertPipelineStage();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertPipelineStage(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertPipelineStage(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertPipelineStage(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertPipelineStage` Mutation requires an argument of type `UpsertPipelineStageVariables`:
+  const upsertPipelineStageVars: UpsertPipelineStageVariables = {
+    id: ..., 
+    pipelineId: ..., 
+    name: ..., 
+    sortOrder: ..., 
+    color: ..., 
+  };
+  mutation.mutate(upsertPipelineStageVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., pipelineId: ..., name: ..., sortOrder: ..., color: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertPipelineStageVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.pipelineStage_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertDeal
+You can execute the `UpsertDeal` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertDeal(options?: useDataConnectMutationOptions<UpsertDealData, FirebaseError, UpsertDealVariables>): UseDataConnectMutationResult<UpsertDealData, UpsertDealVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertDeal(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertDealData, FirebaseError, UpsertDealVariables>): UseDataConnectMutationResult<UpsertDealData, UpsertDealVariables>;
+```
+
+### Variables
+The `UpsertDeal` Mutation requires an argument of type `UpsertDealVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertDealVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  pipelineId: UUIDString;
+  stageId: UUIDString;
+  title: string;
+  companyId?: UUIDString | null;
+  value?: number | null;
+  priority: string;
+  nextStep?: string | null;
+  notes?: string | null;
+  payload: unknown;
+}
+```
+### Return Type
+Recall that calling the `UpsertDeal` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertDeal` Mutation is of type `UpsertDealData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertDealData {
+  deal_upsert: Deal_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertDeal`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertDealVariables } from '@dataconnect/generated';
+import { useUpsertDeal } from '@dataconnect/generated/react'
+
+export default function UpsertDealComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertDeal();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertDeal(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertDeal(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertDeal(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertDeal` Mutation requires an argument of type `UpsertDealVariables`:
+  const upsertDealVars: UpsertDealVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    pipelineId: ..., 
+    stageId: ..., 
+    title: ..., 
+    companyId: ..., // optional
+    value: ..., // optional
+    priority: ..., 
+    nextStep: ..., // optional
+    notes: ..., // optional
+    payload: ..., 
+  };
+  mutation.mutate(upsertDealVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., pipelineId: ..., stageId: ..., title: ..., companyId: ..., value: ..., priority: ..., nextStep: ..., notes: ..., payload: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertDealVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.deal_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## DeleteDeal
+You can execute the `DeleteDeal` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useDeleteDeal(options?: useDataConnectMutationOptions<DeleteDealData, FirebaseError, DeleteDealVariables>): UseDataConnectMutationResult<DeleteDealData, DeleteDealVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useDeleteDeal(dc: DataConnect, options?: useDataConnectMutationOptions<DeleteDealData, FirebaseError, DeleteDealVariables>): UseDataConnectMutationResult<DeleteDealData, DeleteDealVariables>;
+```
+
+### Variables
+The `DeleteDeal` Mutation requires an argument of type `DeleteDealVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface DeleteDealVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `DeleteDeal` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `DeleteDeal` Mutation is of type `DeleteDealData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface DeleteDealData {
+  deal_delete?: Deal_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `DeleteDeal`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, DeleteDealVariables } from '@dataconnect/generated';
+import { useDeleteDeal } from '@dataconnect/generated/react'
+
+export default function DeleteDealComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useDeleteDeal();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useDeleteDeal(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDeleteDeal(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDeleteDeal(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useDeleteDeal` Mutation requires an argument of type `DeleteDealVariables`:
+  const deleteDealVars: DeleteDealVariables = {
+    id: ..., 
+  };
+  mutation.mutate(deleteDealVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(deleteDealVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.deal_delete);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CreateUsageEvent
+You can execute the `CreateUsageEvent` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCreateUsageEvent(options?: useDataConnectMutationOptions<CreateUsageEventData, FirebaseError, CreateUsageEventVariables>): UseDataConnectMutationResult<CreateUsageEventData, CreateUsageEventVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCreateUsageEvent(dc: DataConnect, options?: useDataConnectMutationOptions<CreateUsageEventData, FirebaseError, CreateUsageEventVariables>): UseDataConnectMutationResult<CreateUsageEventData, CreateUsageEventVariables>;
+```
+
+### Variables
+The `CreateUsageEvent` Mutation requires an argument of type `CreateUsageEventVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CreateUsageEventVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  userId?: UUIDString | null;
+  eventType: string;
+  source?: string | null;
+  quantity: number;
+  metadata: unknown;
+}
+```
+### Return Type
+Recall that calling the `CreateUsageEvent` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateUsageEvent` Mutation is of type `CreateUsageEventData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CreateUsageEventData {
+  usageEvent_insert: UsageEvent_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CreateUsageEvent`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CreateUsageEventVariables } from '@dataconnect/generated';
+import { useCreateUsageEvent } from '@dataconnect/generated/react'
+
+export default function CreateUsageEventComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCreateUsageEvent();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCreateUsageEvent(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateUsageEvent(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateUsageEvent(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCreateUsageEvent` Mutation requires an argument of type `CreateUsageEventVariables`:
+  const createUsageEventVars: CreateUsageEventVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    userId: ..., // optional
+    eventType: ..., 
+    source: ..., // optional
+    quantity: ..., 
+    metadata: ..., 
+  };
+  mutation.mutate(createUsageEventVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., userId: ..., eventType: ..., source: ..., quantity: ..., metadata: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(createUsageEventVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.usageEvent_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpsertEnrichmentJob
+You can execute the `UpsertEnrichmentJob` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpsertEnrichmentJob(options?: useDataConnectMutationOptions<UpsertEnrichmentJobData, FirebaseError, UpsertEnrichmentJobVariables>): UseDataConnectMutationResult<UpsertEnrichmentJobData, UpsertEnrichmentJobVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpsertEnrichmentJob(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertEnrichmentJobData, FirebaseError, UpsertEnrichmentJobVariables>): UseDataConnectMutationResult<UpsertEnrichmentJobData, UpsertEnrichmentJobVariables>;
+```
+
+### Variables
+The `UpsertEnrichmentJob` Mutation requires an argument of type `UpsertEnrichmentJobVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpsertEnrichmentJobVariables {
+  id: UUIDString;
+  workspaceId: UUIDString;
+  companyId?: UUIDString | null;
+  jobType: string;
+  payload: unknown;
+}
+```
+### Return Type
+Recall that calling the `UpsertEnrichmentJob` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpsertEnrichmentJob` Mutation is of type `UpsertEnrichmentJobData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpsertEnrichmentJobData {
+  enrichmentJob_upsert: EnrichmentJob_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpsertEnrichmentJob`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpsertEnrichmentJobVariables } from '@dataconnect/generated';
+import { useUpsertEnrichmentJob } from '@dataconnect/generated/react'
+
+export default function UpsertEnrichmentJobComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpsertEnrichmentJob();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpsertEnrichmentJob(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertEnrichmentJob(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpsertEnrichmentJob(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpsertEnrichmentJob` Mutation requires an argument of type `UpsertEnrichmentJobVariables`:
+  const upsertEnrichmentJobVars: UpsertEnrichmentJobVariables = {
+    id: ..., 
+    workspaceId: ..., 
+    companyId: ..., // optional
+    jobType: ..., 
+    payload: ..., 
+  };
+  mutation.mutate(upsertEnrichmentJobVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., workspaceId: ..., companyId: ..., jobType: ..., payload: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(upsertEnrichmentJobVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.enrichmentJob_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateEnrichmentJobStatus
+You can execute the `UpdateEnrichmentJobStatus` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateEnrichmentJobStatus(options?: useDataConnectMutationOptions<UpdateEnrichmentJobStatusData, FirebaseError, UpdateEnrichmentJobStatusVariables>): UseDataConnectMutationResult<UpdateEnrichmentJobStatusData, UpdateEnrichmentJobStatusVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateEnrichmentJobStatus(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEnrichmentJobStatusData, FirebaseError, UpdateEnrichmentJobStatusVariables>): UseDataConnectMutationResult<UpdateEnrichmentJobStatusData, UpdateEnrichmentJobStatusVariables>;
+```
+
+### Variables
+The `UpdateEnrichmentJobStatus` Mutation requires an argument of type `UpdateEnrichmentJobStatusVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateEnrichmentJobStatusVariables {
+  id: UUIDString;
+  status: string;
+  result: unknown;
+  errorMessage?: string | null;
+}
+```
+### Return Type
+Recall that calling the `UpdateEnrichmentJobStatus` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateEnrichmentJobStatus` Mutation is of type `UpdateEnrichmentJobStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateEnrichmentJobStatusData {
+  enrichmentJob_update?: EnrichmentJob_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateEnrichmentJobStatus`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateEnrichmentJobStatusVariables } from '@dataconnect/generated';
+import { useUpdateEnrichmentJobStatus } from '@dataconnect/generated/react'
+
+export default function UpdateEnrichmentJobStatusComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateEnrichmentJobStatus();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateEnrichmentJobStatus(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEnrichmentJobStatus(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEnrichmentJobStatus(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateEnrichmentJobStatus` Mutation requires an argument of type `UpdateEnrichmentJobStatusVariables`:
+  const updateEnrichmentJobStatusVars: UpdateEnrichmentJobStatusVariables = {
+    id: ..., 
+    status: ..., 
+    result: ..., 
+    errorMessage: ..., // optional
+  };
+  mutation.mutate(updateEnrichmentJobStatusVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., status: ..., result: ..., errorMessage: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateEnrichmentJobStatusVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.enrichmentJob_update);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

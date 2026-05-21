@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { APP_NAME } from '../constants';
 import { Hexagon, Mail, Lock, Loader2, CheckCircle2, User, ShieldAlert } from 'lucide-react';
 
 const LoginScreen: React.FC = () => {
@@ -36,24 +37,24 @@ const LoginScreen: React.FC = () => {
             <div className="w-10 h-10 bg-nexus-royal rounded flex items-center justify-center shadow-lg">
               <Hexagon size={24} fill="currentColor" className="text-white" />
             </div>
-            <h1 className="font-bold text-2xl tracking-tight">Bloom Leads</h1>
+            <h1 className="font-bold text-2xl tracking-tight">{APP_NAME}</h1>
           </div>
           <h2 className="text-4xl font-bold leading-tight mb-4">
-            Transforme dados em <br />
-            <span className="text-nexus-gold">receita previsivel.</span>
+            Prospecção B2B com <br />
+            <span className="text-nexus-gold">dados reais.</span>
           </h2>
           <p className="text-nexus-sand text-lg max-w-md opacity-90">
-            Junte-se a empresas B2B que usam o Bloom Leads para enriquecer leads e fechar negocios.
+            O {APP_NAME} organiza busca, listas e pipeline em um fluxo único, com sessão e dados persistidos no backend.
             <br />
             <br />
-            <span className="text-white font-bold bg-white/10 px-2 py-1 rounded">Sessao real com backend persistido</span>
+            <span className="text-white font-bold bg-white/10 px-2 py-1 rounded">Sessão real com backend persistido</span>
           </p>
         </div>
 
         <div className="relative z-10 space-y-4">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="text-nexus-gold w-5 h-5" />
-            <span className="text-sm font-medium">Sessao validada no backend</span>
+            <span className="text-sm font-medium">Sessão validada no backend</span>
           </div>
           <div className="flex items-center gap-3">
             <CheckCircle2 className="text-nexus-gold w-5 h-5" />
@@ -61,7 +62,7 @@ const LoginScreen: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <CheckCircle2 className="text-nexus-gold w-5 h-5" />
-            <span className="text-sm font-medium">Persistencia real de conta e token</span>
+            <span className="text-sm font-medium">Conta e workspace persistidos</span>
           </div>
         </div>
       </div>
@@ -73,7 +74,7 @@ const LoginScreen: React.FC = () => {
               {isRegistering ? 'Crie sua conta' : 'Bem-vindo de volta'}
             </h2>
             <p className="text-nexus-warmGray">
-              {isRegistering ? 'Seu acesso agora passa pelo backend de auth.' : 'Acesse seu dashboard de prospeccao.'}
+              {isRegistering ? 'Seu acesso e autenticado pelo backend.' : 'Acesse seu painel de prospeccao.'}
             </p>
           </div>
 
@@ -139,7 +140,7 @@ const LoginScreen: React.FC = () => {
               className="w-full bg-nexus-royal text-white font-bold py-3 px-4 rounded shadow-md hover:bg-nexus-crimsonLight transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isRegistering ? 'Criar conta' : 'Entrar na plataforma'}
+              {isRegistering ? 'Criar conta' : `Entrar no ${APP_NAME}`}
             </button>
           </form>
 
@@ -159,7 +160,7 @@ const LoginScreen: React.FC = () => {
         </div>
 
         <div className="mt-12 text-xs text-nexus-warmGray text-center">
-          &copy; 2025 Bloom Leads. Todos os direitos reservados.
+          &copy; 2025 {APP_NAME}. Todos os direitos reservados.
           <br />
           Politica de Privacidade • Termos de Uso
         </div>

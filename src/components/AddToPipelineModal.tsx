@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Pipeline, Company } from '../types';
 import { Kanban, X, Check } from 'lucide-react';
+import BloomButton from './ui/button';
+import BloomCard from './ui/card';
+import BloomBadge from './ui/badge';
 
 interface AddToPipelineModalProps {
   isOpen: boolean;
@@ -39,11 +42,13 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-nexus-sidebar/80 backdrop-blur-sm animate-fadeIn p-4">
-      <div className="bg-nexus-surface rounded-xl shadow-float w-full max-w-md border border-nexus-sand overflow-hidden">
+      <BloomCard className="w-full max-w-md overflow-hidden">
         <div className="p-5 border-b border-nexus-sandLight flex justify-between items-center bg-nexus-offWhite">
           <div>
-            <h3 className="font-bold text-nexus-dark text-lg">Adicionar ao Pipeline</h3>
-            <p className="text-xs text-nexus-warmGray mt-1">Empresa: <span className="font-semibold text-nexus-royal">{company.nome_fantasia}</span></p>
+            <h3 className="font-bold text-nexus-dark text-lg">Adicionar ao pipeline</h3>
+            <p className="text-xs text-nexus-warmGray mt-1">
+              Empresa: <BloomBadge variant="brand" className="ml-1">{company.nome_fantasia}</BloomBadge>
+            </p>
           </div>
           <button onClick={onClose} className="text-nexus-warmGray hover:text-nexus-charcoal transition-colors">
             <X className="w-5 h-5" />
@@ -52,7 +57,7 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
 
         <div className="p-6 space-y-4">
           <label className="block text-xs font-bold text-nexus-warmGray uppercase tracking-wide mb-2">
-            Escolha o Funil de Destino
+            Escolha o pipeline de destino
           </label>
           <div className="space-y-2">
             {pipelines.map((pipeline) => (
@@ -83,21 +88,24 @@ const AddToPipelineModal: React.FC<AddToPipelineModalProps> = ({
         </div>
 
         <div className="p-4 border-t border-nexus-sandLight bg-nexus-offWhite flex justify-end gap-3">
-          <button 
+          <BloomButton
             onClick={onClose}
-            className="px-4 py-2 text-sm font-bold text-nexus-charcoal hover:bg-nexus-sandLight rounded transition-colors"
+            variant="secondary"
+            size="sm"
           >
             Cancelar
-          </button>
-          <button 
+          </BloomButton>
+          <BloomButton
             onClick={handleSubmit}
-            className="px-6 py-2 bg-nexus-royal text-white text-sm font-bold rounded shadow-sm hover:bg-nexus-crimsonLight transition-colors flex items-center gap-2"
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-2"
           >
             <Kanban className="w-4 h-4" />
-            Criar Negócio
-          </button>
+            Criar oportunidade
+          </BloomButton>
         </div>
-      </div>
+      </BloomCard>
     </div>
   );
 };

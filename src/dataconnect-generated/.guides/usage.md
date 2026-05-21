@@ -12,7 +12,7 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useGetCurrentUserByAuthUid, useGetWorkspaceBySlug, useListWorkspaceMembers, useListSavedLists, useListPipelineOverview, useListPipelineStages, useListContactsByWorkspace, useListDealsByWorkspace, useBootstrapWorkspace } from '@dataconnect/generated/react';
+import { useGetCurrentUserByAuthUid, useGetWorkspaceBySlug, useListWorkspaceMembers, useListSavedLists, useListPipelineOverview, useListPipelineStages, useListContactsByWorkspace, useListLeadsByWorkspace, useListDealsByWorkspace, useBootstrapWorkspace } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useGetCurrentUserByAuthUid(getCurrentUserByAuthUidVars);
@@ -28,6 +28,8 @@ const { data, isPending, isSuccess, isError, error } = useListPipelineOverview(l
 const { data, isPending, isSuccess, isError, error } = useListPipelineStages(listPipelineStagesVars);
 
 const { data, isPending, isSuccess, isError, error } = useListContactsByWorkspace(listContactsByWorkspaceVars);
+
+const { data, isPending, isSuccess, isError, error } = useListLeadsByWorkspace(listLeadsByWorkspaceVars);
 
 const { data, isPending, isSuccess, isError, error } = useListDealsByWorkspace(listDealsByWorkspaceVars);
 
@@ -70,7 +72,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { getCurrentUserByAuthUid, getWorkspaceBySlug, listWorkspaceMembers, listSavedLists, listPipelineOverview, listPipelineStages, listContactsByWorkspace, listDealsByWorkspace, bootstrapWorkspace } from '@dataconnect/generated';
+import { getCurrentUserByAuthUid, getWorkspaceBySlug, listWorkspaceMembers, listSavedLists, listPipelineOverview, listPipelineStages, listContactsByWorkspace, listLeadsByWorkspace, listDealsByWorkspace, bootstrapWorkspace } from '@dataconnect/generated';
 
 
 // Operation GetCurrentUserByAuthUid:  For variables, look at type GetCurrentUserByAuthUidVars in ../index.d.ts
@@ -93,6 +95,9 @@ const { data } = await ListPipelineStages(dataConnect, listPipelineStagesVars);
 
 // Operation ListContactsByWorkspace:  For variables, look at type ListContactsByWorkspaceVars in ../index.d.ts
 const { data } = await ListContactsByWorkspace(dataConnect, listContactsByWorkspaceVars);
+
+// Operation ListLeadsByWorkspace:  For variables, look at type ListLeadsByWorkspaceVars in ../index.d.ts
+const { data } = await ListLeadsByWorkspace(dataConnect, listLeadsByWorkspaceVars);
 
 // Operation ListDealsByWorkspace:  For variables, look at type ListDealsByWorkspaceVars in ../index.d.ts
 const { data } = await ListDealsByWorkspace(dataConnect, listDealsByWorkspaceVars);

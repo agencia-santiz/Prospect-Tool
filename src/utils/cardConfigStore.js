@@ -1,3 +1,5 @@
+import { readPersistentValue, writePersistentValue } from './persistentStorage.js';
+
 export const CARD_CONFIG_STORAGE_KEY = 'nexus_card_visibility_config';
 
 export const DEFAULT_CARD_CONFIG = Object.freeze({
@@ -36,3 +38,9 @@ export const parseCardConfig = (rawValue) => {
 };
 
 export const serializeCardConfig = (config) => JSON.stringify(normalizeCardConfig(config));
+
+export const readStoredCardConfig = () => parseCardConfig(readPersistentValue(CARD_CONFIG_STORAGE_KEY));
+
+export const writeStoredCardConfig = (config) => {
+  writePersistentValue(CARD_CONFIG_STORAGE_KEY, serializeCardConfig(config));
+};

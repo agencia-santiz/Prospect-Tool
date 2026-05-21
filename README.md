@@ -16,6 +16,8 @@ Se voce quer entender a proxima evolucao do produto, leia [ROADMAP_TECNICO.md](.
 
 Se voce quer a lista executavel de tarefas, leia [BACKLOG_EXECUTAVEL.md](./docs/BACKLOG_EXECUTAVEL.md).
 
+Se voce quer a trilha desktop executavel + backend hibrido, leia [BACKLOG_HIBRIDO_DESKTOP.md](./docs/BACKLOG_HIBRIDO_DESKTOP.md).
+
 ## Run Locally
 
 **Prerequisites:**  Node.js
@@ -36,6 +38,52 @@ Se voce quer a lista executavel de tarefas, leia [BACKLOG_EXECUTAVEL.md](./docs/
    `npm run dev`
 6. Run the backend base:
    `npm run backend`
+7. Run the desktop shell in hybrid mode, which starts the backend locally:
+   `npm run desktop:dev`
+8. Build the Windows installer:
+   `npm run desktop:installer`
+9. Stage the local update feed from the installer artifacts:
+   `npm run desktop:feed:stage`
+10. Serve the staged update feed for local testing:
+   `npm run desktop:feed:serve`
+11. Run the desktop release smoke check:
+   `npm run desktop:release:smoke`
+
+O empacotamento desktop local usa `asar: false` nesta fase para manter o instalador Windows estavel com o fluxo atual do Electron Builder.
+O auto-update desktop fica ativo no app empacotado quando `BLOOM_UPDATE_URL` aponta para um feed HTTP(S) valido com os arquivos gerados pelo `electron-builder`.
+Para teste local, o feed padrao fica em `updates/windows-x64` e pode ser servido em `http://127.0.0.1:8090/windows-x64`.
+O estado local do desktop fica em `userData/persistent-state.json`, o que substitui o papel estrutural do `localStorage` para o core do app.
+Os logs persistentes do desktop ficam em `userData/logs/desktop.log`, com rotacao simples.
+O guia de operacao e recuperacao do desktop fica em [docs/DESKTOP_OPERACAO_RECUPERACAO.md](./docs/DESKTOP_OPERACAO_RECUPERACAO.md).
+
+## Deploy online
+
+This repository is set up to run online with:
+
+- Firebase Hosting for the Vite frontend
+- Firebase Cloud Functions for the `/api` backend
+- Firebase Data Connect for synced workspace data
+
+Production build settings live in [.env.production](.env.production):
+
+- `VITE_BACKEND_URL=/api`
+- `VITE_ENABLE_DATACONNECT_SYNC=true`
+
+Before deploying, make sure your local [.env](.env) includes the backend keys used by the server:
+
+- `GOOGLE_MAPS_API_KEY`
+- `GEMINI_API_KEY`
+
+Typical deploy flow:
+
+1. Build the app:
+   `npm run build`
+2. Deploy functions and hosting:
+   `npx -y firebase-tools@latest deploy --only functions,hosting`
+3. Deploy Data Connect if you want synced workspace data online:
+   `npx -y firebase-tools@latest deploy --only dataconnect`
+
+The backend function is exposed under `/api`, so the deployed frontend and backend stay on the same Firebase domain.
 
 The backend starts on `http://127.0.0.1:8787` by default and exposes:
 

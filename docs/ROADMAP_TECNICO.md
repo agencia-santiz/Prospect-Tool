@@ -36,13 +36,13 @@ Construir um motor de prospeccao B2B que:
 - ranking passa a ser explicavel
 - cards precisam mostrar fonte, score e motivo
 
-### Remover
-- chaves no bundle do frontend
-- login mock em producao
-- pricing mock em producao
-- exportacao falsa
-- dependencia de prompt livre para descobrir empresas
-- exibicao de lead sem provenance
+### Ja concluido
+- chaves sensiveis sairam do bundle do frontend
+- login mock em producao foi removido
+- pricing real do workspace ja esta no fluxo principal
+- exportacao CSV real ja funciona end-to-end
+- exibicao de lead sem provenance foi substituida por logs, rastreio e contexto operacional
+- autenticacao real e workspaces ja estao ativos
 
 ## 3. Arquitetura alvo
 
@@ -70,6 +70,14 @@ Construir um motor de prospeccao B2B que:
 - cache com TTL por fonte
 - logs estruturados
 - monitoramento e alertas
+
+### Estado atual da implementação
+- autenticação real com sessao persistida
+- workspaces e membros ativos no fluxo principal
+- pricing real do workspace
+- exportacao CSV real via backend
+- observabilidade operacional de busca, exportacao e feedback
+- padronizacao de branding e microcopy concluida
 
 ## 4. Pipeline de busca desejado
 
@@ -191,11 +199,10 @@ Aceite:
 
 ## 7. O que continua simulado ate nova ordem
 
-- login mock
-- pricing mock
-- exportacao exibida na UI sem backend real
 - algumas configuracoes locais enquanto a migracao nao acontece
 - cache local de apoio
+- cobertura total de persistencia comercial no backend
+- cobranca, checkout e upgrade comercial
 
 ## 8. Critérios de qualidade
 
@@ -224,7 +231,7 @@ Aceite:
 4. Implementar busca profissional em camadas.
 5. Implementar dedupe, ranking e provenance.
 6. Persistir dominio comercial em Postgres.
-7. Ligar auth, workspaces e limites.
+7. Consolidar limites, billing e upgrade.
 8. Adicionar feedback e observabilidade.
 9. Abrir caminho para enriquecimento e inteligencia adicional.
 

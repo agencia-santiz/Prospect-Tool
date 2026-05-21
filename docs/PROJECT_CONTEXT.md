@@ -1,18 +1,18 @@
 # PROJECT_CONTEXT
 
-_Atualizado em 2026-05-05_
+_Atualizado em 2026-05-13_
 
 ## Resumo executivo
 
 O Bloom Leads e uma ferramenta de prospeccao B2B focada em descoberta de empresas, organizacao comercial e acompanhamento de pipeline.
-O projeto ja saiu do estagio de ideia e hoje esta em um **MVP avancado / prototipo funcional**: as jornadas centrais de login, busca de leads, organizacao em listas e Kanban ja estao operacionais.
+O projeto ja saiu do estagio de ideia e hoje esta em um **MVP avancado / prototipo funcional**: as jornadas centrais de login, busca de leads, organizacao em listas, pipeline, exportacao, pricing e observabilidade ja estao operacionais.
 
 ## Visao geral do produto
 
 - Aplicacao web construida com React, Vite e TypeScript.
 - Fluxo principal orientado a prospeccao comercial, organizacao de contatos e gestao de negocios.
-- Persistencia atual baseada principalmente em `localStorage`.
-- Integracoes de busca apoiadas por Gemini e Google Maps.
+- Persistencia do core de prospeccao baseada principalmente em `localStorage`, com `savedLists`, contatos, pipeline e deals salvos localmente por workspace e partes reais ja apoiadas por backend.
+- Integracoes de busca apoiadas por Gemini, Google Maps e camadas abertas de fallback.
 - Interface dividida em modulos, com navegacao lateral e areas de trabalho separadas.
 - Configuracoes auxiliares do projeto ficam em `config/`, enquanto o codigo principal vive em `src/`.
 
@@ -43,8 +43,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 ### Nao Objetivos
 
 - Nao faremos processamento de pagamentos complexo, cobranca recorrente, split ou suporte multi-moeda nesta fase.
-- Nao faremos CRM multi-tenant, com isolamento por conta, workspaces ou hierarquias empresariais completas.
-- Nao faremos permissao granular por cargo, times, aprovadores ou auditoria corporativa avancada.
+- Nao faremos permissao granular por cargo, times, aprovadores ou auditoria corporativa avancada alem do modelo simples de workspaces e membros.
 - Nao faremos automacoes pesadas como sequencias de email, cadencias omnichannel ou workflows visuais complexos.
 - Nao faremos integracoes amplas com varios CRMs, ERPs ou suites de operacao comercial neste momento.
 - Nao faremos uma reescrita para mobile nativo, nem uma arquitetura enterprise antes de validar o MVP.
@@ -60,6 +59,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - Enquanto o Email/Senha do Firebase Auth nao estiver habilitado no projeto, o app usa fallback legado para nao bloquear o fluxo do MVP.
 - O login Google simulado foi removido da tela principal.
 - Existe bootstrap automatico de usuario e workspace no Data Connect na primeira entrada.
+- A sincronizacao com Firebase Data Connect agora e opt-in via `VITE_ENABLE_DATACONNECT_SYNC=true`; sem esse flag, o app opera em modo local/seguro e evita requests 404 para conectores nao provisionados.
 - Cada usuario autenticado recebe um workspace proprio, com membership e role.
 - O SDK do Firebase ja esta configurado no frontend em `src/lib/firebase.ts`, com variaveis `VITE_FIREBASE_*` lidas do ambiente para preparar a migracao de Auth e Firestore.
 - O schema inicial do Firebase Data Connect ja foi criado em `dataconnect/schema/schema.gql`, espelhando o dominio principal do produto para a migracao para Cloud SQL/PostgreSQL.
@@ -84,7 +84,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - E possivel salvar leads em listas.
 - E possivel marcar contatos como contatados.
 - Existe visao em grade e em lista para trabalhar com leads.
-- O fluxo de exportacao existe como parte da experiencia, mas ainda nao depende de backend real.
+- O fluxo de exportacao gera CSV real via backend e entrega o arquivo para download no navegador.
 
 ### 5. Pipeline e Kanban
 
@@ -99,14 +99,43 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - A aplicacao tem tela de login, loading states e notificacoes.
 - Ha estrutura de navegacao com modulos principais para explorar, listas, contatos e pipeline.
 - Os modais de `Pricing` e `Settings` ja estao ligados ao menu do usuario no shell principal.
+- O modal de `Pricing` agora reflete o plano e os limites reais do workspace, em vez de um fluxo simulado.
 - As configuracoes do `Settings` persistem localmente e afetam a visualizacao do pipeline.
 - O sistema de idiomas ja existe.
+- A rotina operacional agora registra busca com latencia, quantidade, fontes usadas e resultado zero, exportacao CSV com volume e duracao, e feedback de qualidade com sinal positivo ou negativo.
 - O campo de segmento na busca agora usa uma taxonomia versionada compartilhada entre frontend e backend, com sugestoes desde a primeira letra, por prefixo e por apelido, por exemplo `a` ou `adm` -> `Administrativo / Escritório`.
-- A busca de leads canoniza o segmento selecionado antes de consultar a fonte ativa; hoje a rota principal prioriza dados abertos com fallback complementar quando configurado.
+- A busca de leads canoniza o segmento selecionado antes de consultar a fonte ativa; hoje a rota principal prioriza o backend com Google Places/Gemini, aplica filtro de aderencia ao segmento e usa dados abertos apenas como complemento restrito quando necessario.
+- A quantidade pedida na busca agora e respeitada de ponta a ponta: buscas pequenas recebem uma folga interna para nao voltar curtas por filtro, e buscas grandes seguem o valor digitado para tentar completar o maximo possivel com as fontes disponiveis.
 - O WhatsApp agora aparece com status em tres estados: `confirmado` quando existe evidência explicita como `wa.me`, `não confirmado` quando ha telefone mas sem sinal explicito, e `não possui` quando nao ha evidencia util.
+- A selecao de WhatsApp virou um dropdown de status apenas no modal de detalhes do lead, incluindo a opcao `não possui`.
+- O modal de detalhes ganhou atalho para Instagram quando o lead tem link cadastrado em `socials.instagram`.
 - Os botoes de WhatsApp continuam abrindo a conversa pelo link `wa.me` com o telefone normalizado do lead, para funcionar melhor no navegador.
+- No modo grade, os cards de lead agora abrem uma janela flutuante para os detalhes e o status de WhatsApp pode ser ajustado sem abrir outra tela, com persistencia local no navegador.
 - Ao sair de uma lista e voltar para `Explorar Negócios`, o app restaura a busca anterior da prospecção e o cabeçalho passa a mostrar o resumo da pesquisa, nao o nome da lista.
 - A base visual e modular, com varios componentes prontos para evolucao.
+
+### 7. Correcoes e consolidacao recentes
+
+- A exportacao deixou de ser visual e passou a gerar CSV real end-to-end pelo backend.
+- A autenticacao deixou de depender do login mock e agora usa fluxo real com sessao persistida.
+- Nomes, branding e microcopy foram padronizados para refletir a linguagem real do produto.
+- A observabilidade operacional foi fechada com logs estruturados de busca, exportacao e feedback.
+- O corrompimento visual de texto em alguns trechos de docs e UI foi normalizado nos arquivos afetados.
+- A trilha hibrida desktop foi iniciada com shell Electron, bootstrap local do backend e comandos de dev dedicados.
+- O instalador Windows da trilha desktop hibrida foi gerado com sucesso, usando `asar: false` nesta fase para compatibilidade com o empacotamento local.
+- O desktop empacotado agora suporta auto-update via `electron-updater` quando `BLOOM_UPDATE_URL` aponta para um feed HTTP(S) valido.
+- O projeto agora possui um feed local de update em `updates/windows-x64`, com scripts para stage e serve dos artefatos gerados.
+- O desktop passou a usar armazenamento local em arquivo para o core do workspace e preferencias de interface, reduzindo a dependencia estrutural de `localStorage`.
+- A ponte de migracao do `localStorage` legado para o armazenamento novo foi implementada como rotina idempotente de primeira abertura no desktop.
+- O desktop passou a registrar uma outbox local de mutacoes de workspace para servir de base ao sync futuro.
+- O contrato de sync por entidade e a politica de conflito simples foram formalizados em utilitarios e documento especifico.
+- A sessao do desktop agora carrega `workspaceOrigin` e distingue workspace remoto, local e legado no fluxo de autenticacao.
+- O topo do app passou a exibir o estado de sync com base na rede, na outbox local e na origem do workspace.
+- O desktop agora faz pull do snapshot remoto via Data Connect e faz flush assíncrono da outbox local para as entidades compartilhadas suportadas.
+- O motor de busca no desktop ficou mais resiliente: falhas isoladas de geocoding ou de uma fonte principal nao derrubam mais a pesquisa inteira, e o fallback Open Data usa headers explicitos para Nominatim e Overpass.
+- Durante a fase de depuracao do desktop, a janela principal abre o DevTools acoplado à direita por padrao; o comportamento pode ser desligado com `BLOOM_DESKTOP_OPEN_DEVTOOLS=0`.
+- O desktop agora grava logs persistentes em `userData/logs/desktop.log`, com rotacao simples e fallback para stdout quando o filesystem falha.
+- A trilha desktop ganhou smoke de release via `npm run desktop:release:smoke` e um guia curto de operacao/recuperacao.
 
 ## Arquitetura atual
 
@@ -114,6 +143,9 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 
 - `src/App.tsx`: orquestracao geral do app, rotas de estado e modulos.
 - `src/contexts/AuthContext.tsx`: autenticacao real, token de sessao e estado de usuario.
+- `server/routes/search.js`: endpoint principal de busca, instrumentacao e log de resultado.
+- `server/routes/export.js`: exportacao CSV real e validacao de payload.
+- `server/routes/feedback.js`: captura de feedback de qualidade e telemetria operacional.
 - `server/routes/workspaces.js`: workspace atual, membros e roles.
 - `src/services/geminiService.ts`: descoberta e enriquecimento de leads.
 - `src/services/openDataService.js`: consulta gratuita via Nominatim e Overpass para leads abertos.
@@ -150,7 +182,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - O `GoogleMapsService` usa Google Geocoding para bias de localizacao e Google Places para descobrir leads principais.
 - O `CompanyNormalizer` padroniza os campos principais do lead antes da validacao e da resposta final.
 - O `CompanyDeduper` consolida leads repetidos e marca casos duvidosos sem apagar o contexto de origem.
-- O `OpenDataService` usa Nominatim e Overpass como camada auxiliar de cobertura quando a busca principal ainda nao atingiu a quantidade desejada.
+- O `OpenDataService` usa Nominatim e Overpass como camada auxiliar de cobertura, mas os resultados passam por filtro de relevancia de segmento antes de entrar na resposta final.
 - O `CnpjCnaeService` adiciona validacao de aderencia setorial para empresas com CNPJ/CNAE conhecido e pode buscar dados cadastrais oficiais quando configurado.
 
 ### Persistencia local
@@ -175,9 +207,13 @@ O projeto deve ser tratado como um **MVP avancado** com foco em operacao local e
 - pesquisar leads por cidade e segmento
 - carregar mais resultados da busca
 - salvar listas e contatos
+- agrupar listas em pastas simples na tela de listas
 - marcar prospeccoes como contatadas
 - criar negocios e mover etapas no Kanban
 - abrir e editar detalhes de negocio
+- exportar listas em CSV real pelo backend
+- visualizar pricing e limites reais do workspace
+- registrar eventos de busca, exportacao e feedback para monitoramento
 
 ### Ainda esta em consolidacao
 
@@ -189,12 +225,11 @@ O projeto deve ser tratado como um **MVP avancado** com foco em operacao local e
 - taxonomia canonica de segmentos com ID estavel, aliases e termos de classificacao
 - orquestracao de busca com plano explicito de cidade, segmento e fontes
 - integracao principal com Google Places e Geocoding, com fallback preservado para continuidade
+- ranking de leads considera avaliacao e volume de reviews do Google quando disponiveis
 - persistencia real em backend
-- autenticacao real
-- planos, pagamento e upgrade
-- padronizacao final de branding e nomenclatura
+- cobranca, checkout e upgrade comercial pago
 - validacao de build e CI como rotina do projeto
-- amarracao completa dos modais e telas auxiliares ao fluxo principal
+- amarracao final de algumas telas auxiliares e fluxos secundarios ao fluxo principal
 
 ## Escopo da V1
 
@@ -211,7 +246,7 @@ A V1 do Bloom Leads consolida o MVP avancado atual como uma experiencia local-fi
 ### Nao objetivos
 
 - Nao faremos processamento de pagamentos complexo, cobranca recorrente, split ou suporte multi-moeda nesta V1.
-- Nao faremos CRM multi-tenant, workspaces, hierarquias empresariais ou permissao granular por cargo.
+- Nao faremos CRM multi-tenant completo, hierarquias empresariais complexas, isolamento por conta muito granular ou estruturas corporativas extensas nesta fase.
 - Nao faremos automacoes pesadas como sequencias de email, cadencias omnichannel ou workflows visuais complexos.
 - Nao faremos integracoes amplas com varios CRMs, ERPs ou suites de operacao comercial.
 - Nao faremos reescrita para aplicativo nativo nem troca da stack principal do frontend.
@@ -226,18 +261,25 @@ A V1 do Bloom Leads consolida o MVP avancado atual como uma experiencia local-fi
 - Quando o backend entrar, `localStorage` deve ser rebaixado para cache transitorio, preferencias de interface e ponte de migracao.
 - Nao introduzir uma API customizada desnecessaria nesta fase; a migracao futura deve ser incremental e reversivel.
 
-### Em aberto
+### Estado consolidado
 
-- [em andamento] Persistencia real em backend via Firebase Data Connect.
-- [em andamento] Provisionamento do Cloud SQL do Firebase Data Connect.
 - [concluido] Autenticacao real com sessao persistida.
 - [concluido] Workspaces e membros com role por usuario.
-- [aberto] Planos, pagamento e upgrade.
-- [aberto] Padronizacao final de branding e nomenclatura.
+- [concluido] Padronizacao final de branding e nomenclatura.
+- [concluido] Exportacao CSV real end-to-end.
+- [concluido] Pricing real do workspace e limites.
+- [concluido] Observabilidade operacional de busca, exportacao e feedback.
+- [em andamento] Persistencia real em backend via Firebase Data Connect.
+- [em andamento] Provisionamento do Cloud SQL do Firebase Data Connect.
+
+### Em aberto
+
+- [aberto] Cobranca, checkout e upgrade comercial pago.
 - [aberto] Refinamento da identidade visual e da linguagem de interface.
-- [aberto] Amarracao completa dos modais e telas auxiliares ao fluxo principal.
+- [aberto] Amarracao final de algumas telas secundarias e fluxos auxiliares.
 - [aberto] Regras finais de CI e release para a operacao continua do projeto.
-- [aberto] Definicao do momento de migrar `localStorage` para backend sem quebrar o fluxo atual.
+- [aberto] Estrategia de hospedagem publica do feed de update e ajustes finais de distribuicao desktop.
+- [concluido] Ponte de migracao do `localStorage` legado para o armazenamento local novo no desktop.
 
 ### Direcao futura priorizada pela pesquisa [aberto]
 
@@ -249,7 +291,7 @@ Quando essa etapa entrar no roadmap, a migracao deve acontecer em blocos pequeno
 - As fontes principais de leads passam a ser Google Places e CNPJ/CNAE; OpenStreetMap vira complementar.
 - `Gemini` deixa de ser fonte primaria de empresas e passa a atuar como classificador, expansor de termos e resumidor.
 - `localStorage` deixa de ser base de negocio e passa a servir apenas como cache transitorio, preferencias de interface e ponte de migracao.
-- Auth, workspaces, limites de uso, feedback e eventos de uso entram no backend.
+- Limites de uso, feedback e eventos de uso continuam no backend e se consolidam junto com a migracao de persistencia.
 - Dados aninhados do CRM devem ser persistidos no backend sem duplicar a logica de tela; o formato final deve seguir o que a UI ja consome hoje.
 
 ## Pontos de atencao
@@ -270,7 +312,7 @@ A pesquisa tecnica em [bloom_leads_pesquisa_tecnica_estrategica.md](./bloom_lead
 - score explicavel, provenance por campo e motivo de aparicao do lead
 - deduplicacao forte por CNPJ, place_id, telefone, dominio e geolocalizacao
 - persistencia comercial real em Postgres
-- auth, workspaces, limites e eventos de uso
+- limites, feedback e eventos de uso
 - localStorage apenas como apoio temporario para UI e migracao
 
 ## Roadmap resumido
@@ -284,7 +326,7 @@ Ordem pratica recomendada:
 2. Tirar a busca do frontend e montar o orquestrador de pesquisa.
 3. Implementar taxonomia, normalizacao, dedupe, ranking e provenance.
 4. Persistir listas, contatos, deals, pipelines e buscas no banco.
-5. Ligar auth real, workspaces, planos e limites.
+5. Ligar cobranca real, upgrade e limites.
 6. Adicionar feedback, observabilidade e enriquecimento gradual.
 
 ## Leitura rapida do projeto

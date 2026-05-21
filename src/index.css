@@ -1,76 +1,123 @@
-/* ═══════════════════════════════════════════════════════
-   SANTIZ CRIMSON DESIGN SYSTEM — index.css
-   Warm cream canvas · Crimson accents · Border-first depth
-   ═══════════════════════════════════════════════════════ */
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+/* Bloom Leads Design System - global foundation */
 
 :root {
-  --santiz-crimson: #ba0c2f;
-  --santiz-crimson-light: #d4143a;
-  --santiz-crimson-dark: #8a0923;
-  --santiz-crimson-glow: rgba(186, 12, 47, 0.12);
-  --santiz-crimson-tint: #f9e6ea;
-  --santiz-cream: #fffefb;
-  --santiz-off-white: #fffdf9;
-  --santiz-black: #000000;
-  --santiz-charcoal: #36302a;
-  --santiz-warm-gray: #8a8278;
-  --santiz-sand: #c5b8a8;
-  --santiz-sand-light: #ebe6dd;
-  --santiz-gold: #c9a046;
-  --santiz-gold-light: #d4b366;
-  --santiz-success: #2a9d6f;
-  --santiz-warning: #d4913d;
-  --santiz-info: #3a7bc8;
+  --color-brand-600: #e6003c;
+  --color-brand-500: #f0445e;
+  --color-brand-100: #fde7ed;
+  --color-brand-50: #fff0f3;
+
+  --color-success-600: #12b76a;
+  --color-success-50: #ecfdf3;
+
+  --color-info-600: #2563eb;
+  --color-info-50: #eff6ff;
+
+  --color-warning-600: #f59e0b;
+  --color-warning-50: #fffbeb;
+
+  --color-danger-600: #d92d20;
+  --color-danger-50: #fef3f2;
+
+  --color-bg-app: #f8f9fb;
+  --color-surface: #ffffff;
+  --color-border: #e6e8ef;
+  --color-border-muted: #f0f2f5;
+
+  --color-text-primary: #111827;
+  --color-text-secondary: #667085;
+  --color-text-muted: #98a2b3;
+
+  --font-family-base: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 22px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-sm: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(230, 0, 60, 0.12);
 }
 
-/* ─── Global Reset & Base ─── */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: light;
+}
+
 body {
-  background-color: var(--santiz-cream);
-  color: var(--santiz-black);
-  font-family: 'Inter', Helvetica, Arial, sans-serif;
   margin: 0;
+  min-height: 100%;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Selection ─── */
-::selection {
-  background-color: var(--santiz-crimson-tint);
-  color: var(--santiz-crimson-dark);
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-/* ─── Custom Scrollbar — Warm Sand ─── */
+::selection {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-600);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--santiz-sand);
-  border-radius: 3px;
+  background: var(--color-border);
+  border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--santiz-warm-gray);
+  background: var(--color-text-muted);
 }
 
-/* ─── Focus Ring — Crimson Glow ─── */
-input:focus,
-select:focus,
-textarea:focus,
-button:focus-visible {
+:where(input, select, textarea, button):focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--santiz-crimson-glow);
+  box-shadow: var(--shadow-focus);
 }
 
-/* ─── Utility: Smooth Transitions ─── */
+.transition-bloom,
 .transition-santiz {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

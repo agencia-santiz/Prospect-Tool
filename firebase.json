@@ -4,6 +4,34 @@
       "dataDir": "dataconnect/.dataconnect/pgliteData"
     }
   },
+  "functions": {
+    "source": "."
+  },
+  "hosting": {
+    "public": "dist",
+    "predeploy": [
+      "npm run build"
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/tests/**",
+      "**/docs/**",
+      "**/output/**",
+      "**/*.log"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "api"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "dataconnect": {
     "source": "dataconnect"
   }

@@ -1,6 +1,8 @@
 import { Company } from "../types";
+import { getBackendBaseUrl } from '../utils/backendUrl.js';
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8787';
+const BACKEND_BASE_URL = getBackendBaseUrl();
+const FRONTEND_BACKEND_BASE_URL = String(import.meta.env.VITE_BACKEND_URL || BACKEND_BASE_URL).replace(/\/$/, '');
 
 type GeminiBackendResponse = {
   leads?: Company[];
@@ -10,10 +12,11 @@ export const fetchEnrichedLeads = async (
   location: string,
   segment: string,
   excludeNames: string[] = [],
-  quantity: number = 9
+  quantity: number = 9,
+  intent: string = 'NONE'
 ): Promise<Company[]> => {
   try {
-    const response = await fetch(`${BACKEND_BASE_URL}/search/enrich`, {
+    const response = await fetch(`${FRONTEND_BACKEND_BASE_URL}/search/enrich`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,6 +26,7 @@ export const fetchEnrichedLeads = async (
         segment,
         excludeNames,
         quantity,
+        intent,
       }),
     });
 
@@ -44,7 +48,7 @@ export const fetchEnrichedLeads = async (
 
 export const exportLeadsToCsv = async (leads: Company[]): Promise<Blob | null> => {
   try {
-    const response = await fetch(`${BACKEND_BASE_URL}/export/csv`, {
+    const response = await fetch(`${FRONTEND_BACKEND_BASE_URL}/export/csv`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

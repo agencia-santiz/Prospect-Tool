@@ -172,6 +172,7 @@ type Deal @table(name: "deals") {
   priority: String! @default(value: "medium")
   nextStep: String
   notes: String
+  payload: Any! @default(value: {})
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
 }

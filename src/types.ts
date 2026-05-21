@@ -25,7 +25,7 @@ export interface User {
 export interface Company {
   id: string;
   cnpj: string; // Can be Tax ID for international
-  razão_social: string;
+  razao_social: string;
   nome_fantasia: string;
   endereco?: string; // New field: Full Address
   cidade: string;
@@ -41,10 +41,13 @@ export interface Company {
   email?: string;
   website?: string;
   websiteDomain?: string;
+  rating?: number;
+  userRatingsTotal?: number;
   whatsappStatus?: WhatsAppStatus;
   status: LeadStatus;
   score: number; // 0 to 100
   rankingReasons?: string[];
+  relevance_summary?: string;
   provenance?: any;
   partners?: string[];
   source: DataSource; 
@@ -58,6 +61,7 @@ export interface Company {
 export interface SearchParams {
   city: string;
   segment: string;
+  intent?: string;
 }
 
 export interface SavedList {
@@ -66,6 +70,7 @@ export interface SavedList {
   createdAt: string;
   leads: Company[];
   params: SearchParams;
+  groupName?: string;
 }
 
 // CRM TYPES
@@ -93,6 +98,7 @@ export interface DealContactInfo {
 export interface DealCustomField {
     label: string;
     value: string;
+    section?: 'commercial' | 'production' | 'custom';
 }
 
 export interface ActivityLog {
@@ -124,12 +130,15 @@ export interface DealTask {
 export interface Deal {
   id: string;
   companyId?: string; 
+  ownerUserId?: string;
   companyName: string;
   value: number;
   pipelineId: string;
   stageId: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   createdAt: string;
+  summary?: string;
+  nextStep?: string;
   contactInfo?: DealContactInfo;
   customFields: DealCustomField[];
   activities: ActivityLog[];

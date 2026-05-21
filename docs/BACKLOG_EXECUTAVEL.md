@@ -192,14 +192,17 @@ Leituras base:
 - Objetivo: tornar contatos persistentes.
 - Dependencias: SA-02.01, BE-00.04.
 - Entregavel: CRUD de contatos com referencia de origem.
-- Pronto quando: contatos nao dependem mais de localStorage.
+- Pronto quando: contatos sobrevivem a refresh e troca de dispositivo.
+- Estado: concluido.
 
 ### SA-02.05 - Migrar deals e pipelines para Postgres
+
 - Prioridade: `P0`
 - Objetivo: consolidar CRM no backend.
 - Dependencias: SA-02.01, BE-00.04.
 - Entregavel: pipelines, stages, deals e historico.
 - Pronto quando: pipeline funciona sem depender de estado local como fonte de verdade.
+- Estado: concluido.
 
 ### SA-02.06 - Criar usage_events e limites por plano
 - Prioridade: `P1`
@@ -207,6 +210,8 @@ Leituras base:
 - Dependencias: SA-02.01, BE-00.04.
 - Entregavel: eventos de uso e controle de limite mensal.
 - Pronto quando: busca, exportacao e enriquecimento geram contabilizacao.
+- Estado: concluido.
+
 
 ### SA-02.07 - Criar jobs assincronos de enriquecimento
 - Prioridade: `P1`
@@ -214,6 +219,7 @@ Leituras base:
 - Dependencias: BE-00.02, BE-00.04.
 - Entregavel: fila de jobs para refresh, site, telefone e score.
 - Pronto quando: enriquecimento roda em background.
+- Estado: concluido.
 
 ### SA-02.08 - Definir cache e refresh programado
 - Prioridade: `P1`
@@ -221,6 +227,7 @@ Leituras base:
 - Dependencias: SA-02.07.
 - Entregavel: politica de TTL e revalidacao.
 - Pronto quando: dados salvos podem ser atualizados sem perder historico.
+- Estado: concluido.
 
 ## Fase 3 - Inteligencia e enriquecimento
 
@@ -230,6 +237,7 @@ Leituras base:
 - Dependencias: SR-01.02, BE-00.03.
 - Entregavel: classificacao com JSON schema e validacao forte.
 - Pronto quando: IA nao inventa categoria nem empresa.
+- Estado: concluido.
 
 ### IN-03.02 - Criar resumo explicavel de relevancia
 - Prioridade: `P1`
@@ -237,6 +245,7 @@ Leituras base:
 - Dependencias: SR-01.09, IN-03.01.
 - Entregavel: resumo curto com evidencias.
 - Pronto quando: a UI consegue exibir um motivo legivel.
+- Estado: concluido.
 
 ### IN-03.03 - Implementar validacao de telefone e dominio
 - Prioridade: `P1`
@@ -244,6 +253,7 @@ Leituras base:
 - Dependencias: SR-01.07.
 - Entregavel: heuristicas e validacoes por campo.
 - Pronto quando: contatos ruins recebem penalidade clara.
+- Estado: concluido.
 
 ### IN-03.04 - Implementar regras de intencao comercial
 - Prioridade: `P2`
@@ -251,6 +261,7 @@ Leituras base:
 - Dependencias: SR-01.02, SR-01.09.
 - Entregavel: intent profiles com boosts e penalidades.
 - Pronto quando: a busca muda conforme a proposta comercial.
+- Estado: concluido.
 
 ### IN-03.05 - Implementar refresh automatico de leads salvos
 - Prioridade: `P2`
@@ -258,6 +269,7 @@ Leituras base:
 - Dependencias: SA-02.07, SA-02.08.
 - Entregavel: rotina de renovacao de dados importantes.
 - Pronto quando: leads antigos podem ser revisados sem acao manual pesada.
+- Estado: concluido.
 
 ### IN-03.06 - Fechar feedback loop do ranking
 - Prioridade: `P2`
@@ -265,6 +277,7 @@ Leituras base:
 - Dependencias: SR-01.11.
 - Entregavel: uso do feedback para ajustar score e priorizacao.
 - Pronto quando: o sistema aprende com sinais do usuario.
+- Estado: concluido.
 
 ## Fase 4 - Acabamento operacional
 
@@ -278,21 +291,25 @@ Leituras base:
 - Prioridade: `P1`
 - Dependencias: SA-02.06.
 - Pronto quando: a experiencia de upgrade reflete o produto real.
+- Estado: concluido.
 
 ### OP-04.03 - Converter exportacao visual em exportacao real end-to-end
 - Prioridade: `P1`
 - Dependencias: SR-01.12, SA-02.03, SA-02.04.
 - Pronto quando: exportar gera arquivo confiavel com dados persistidos.
+- Estado: concluido.
 
 ### OP-04.04 - Revisar nomes, branding e microcopy
 - Prioridade: `P2`
 - Dependencias: fase 1 e 2 estaveis.
 - Pronto quando: nomenclatura nao contradiz a arquitetura real.
+- Estado: concluido.
 
 ### OP-04.05 - Fechar observabilidade e rotina de qualidade
 - Prioridade: `P1`
 - Dependencias: BE-00.05.
 - Pronto quando: erros, latencia, custo e zero-result sao acompanhados.
+- Estado: concluido.
 
 ## Tarefas imediatas sugeridas
 

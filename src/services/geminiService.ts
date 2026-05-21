@@ -2,7 +2,7 @@ import { Company } from "../types";
 import { getBackendBaseUrl } from '../utils/backendUrl.js';
 
 const BACKEND_BASE_URL = getBackendBaseUrl();
-const FRONTEND_BACKEND_BASE_URL = String(import.meta.env.VITE_BACKEND_URL || BACKEND_BASE_URL).replace(/\/$/, '');
+const FRONTEND_BACKEND_BASE_URL = String(BACKEND_BASE_URL).replace(/\/$/, '');
 
 type GeminiBackendResponse = {
   leads?: Company[];

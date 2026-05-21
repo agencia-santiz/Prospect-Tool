@@ -60,6 +60,7 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - O login Google simulado foi removido da tela principal.
 - Existe bootstrap automatico de usuario e workspace no Data Connect na primeira entrada.
 - A sincronizacao com Firebase Data Connect agora e opt-in via `VITE_ENABLE_DATACONNECT_SYNC=true`; sem esse flag, o app opera em modo local/seguro e evita requests 404 para conectores nao provisionados.
+- No desktop empacotado, o sync remoto com Data Connect fica desativado por default para evitar erros de operacao enquanto o backend remoto nao estiver provisionado de ponta a ponta.
 - Cada usuario autenticado recebe um workspace proprio, com membership e role.
 - O SDK do Firebase ja esta configurado no frontend em `src/lib/firebase.ts`, com variaveis `VITE_FIREBASE_*` lidas do ambiente para preparar a migracao de Auth e Firestore.
 - O schema inicial do Firebase Data Connect ja foi criado em `dataconnect/schema/schema.gql`, espelhando o dominio principal do produto para a migracao para Cloud SQL/PostgreSQL.

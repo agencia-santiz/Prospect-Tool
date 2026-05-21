@@ -14,7 +14,8 @@ const firebaseConfig = {
 };
 
 const hasFirebaseConfig = Object.values(firebaseConfig).every((value) => typeof value === 'string' && value.trim().length > 0);
-export const isDataConnectSyncEnabled = import.meta.env.VITE_ENABLE_DATACONNECT_SYNC === 'true';
+const isDesktopRuntime = typeof window !== 'undefined' && typeof window.bloomDesktop === 'object' && window.bloomDesktop !== null;
+export const isDataConnectSyncEnabled = import.meta.env.VITE_ENABLE_DATACONNECT_SYNC === 'true' && !isDesktopRuntime;
 
 export const isFirebaseConfigured = hasFirebaseConfig;
 

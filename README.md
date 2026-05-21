@@ -60,7 +60,7 @@ O guia de operacao e recuperacao do desktop fica em [docs/DESKTOP_OPERACAO_RECUP
 Para publicar uma versao nova com auto-update no GitHub Releases:
 
 1. Suba a versao no `package.json`
-2. Crie e envie uma tag no formato `v0.0.5`
+2. Crie e envie uma tag no formato `v0.0.x`
 3. Rode o workflow `Desktop Release`
 
 O workflow compila o instalador e publica os artefatos no release do GitHub para o updater consumir automaticamente.
@@ -77,6 +77,8 @@ Production build settings live in [.env.production](.env.production):
 
 - `VITE_BACKEND_URL=/api`
 - `VITE_ENABLE_DATACONNECT_SYNC=true`
+
+No desktop empacotado, o app ignora o sync remoto do Data Connect por enquanto para evitar requests a conectores nao provisionados. O modo web continua usando o flag acima.
 
 Before deploying, make sure your local [.env](.env) includes the backend keys used by the server:
 

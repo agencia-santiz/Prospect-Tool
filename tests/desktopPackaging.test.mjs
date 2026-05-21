@@ -19,6 +19,7 @@ assert.ok(packageJson.build.files.includes('dist/**/*'));
 
 assert.match(indexHtml, /<link rel="stylesheet" href="\/src\/index\.css">/);
 assert.ok(!indexHtml.includes('cdn.tailwindcss.com'));
+assert.ok(!indexHtml.includes('tailwind.config ='));
 assert.ok(!indexHtml.includes('aistudiocdn.com'));
 assert.ok(!indexHtml.includes('fonts.googleapis.com'));
 assert.ok(!indexHtml.includes('fonts.gstatic.com'));

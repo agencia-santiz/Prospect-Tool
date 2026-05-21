@@ -17,7 +17,11 @@ const frontendGeminiService = await readFile(join(repoRoot, 'src/services/gemini
 assert.ok(!frontendGeminiService.includes('GoogleGenAI'));
 assert.ok(!frontendGeminiService.includes('process.env.API_KEY'));
 assert.ok(frontendGeminiService.includes('/search/enrich'));
-assert.ok(frontendGeminiService.includes('VITE_BACKEND_URL'));
+assert.ok(!frontendGeminiService.includes('VITE_BACKEND_URL'));
+
+const frontendFirebase = await readFile(join(repoRoot, 'src/lib/firebase.ts'), 'utf8');
+assert.ok(frontendFirebase.includes('isDesktopRuntime'));
+assert.ok(frontendFirebase.includes('!isDesktopRuntime'));
 
 const tempDir = await mkdtemp(join(tmpdir(), 'bloom-env-'));
 

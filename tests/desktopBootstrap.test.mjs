@@ -10,17 +10,18 @@ const runtime = resolveDesktopRuntime({
 
 assert.equal(runtime.frontendUrl, 'http://localhost:3001');
 assert.equal(runtime.backendUrl, 'http://127.0.0.1:8788');
+assert.equal(runtime.openDevTools, false);
 
 const env = createDesktopRuntimeEnv(runtime, {});
 assert.equal(env.BLOOM_DESKTOP_RUNTIME, '1');
 assert.equal(env.BLOOM_FRONTEND_URL, 'http://localhost:3001');
 assert.equal(env.BLOOM_BACKEND_URL, 'http://127.0.0.1:8788');
-assert.equal(env.BLOOM_DESKTOP_OPEN_DEVTOOLS, '1');
+assert.equal(env.BLOOM_DESKTOP_OPEN_DEVTOOLS, '0');
 
-const disabledRuntime = resolveDesktopRuntime({ openDevTools: false });
-assert.equal(disabledRuntime.openDevTools, false);
-const disabledEnv = createDesktopRuntimeEnv(disabledRuntime, {});
-assert.equal(disabledEnv.BLOOM_DESKTOP_OPEN_DEVTOOLS, '0');
+const enabledRuntime = resolveDesktopRuntime({ openDevTools: true });
+assert.equal(enabledRuntime.openDevTools, true);
+const enabledEnv = createDesktopRuntimeEnv(enabledRuntime, {});
+assert.equal(enabledEnv.BLOOM_DESKTOP_OPEN_DEVTOOLS, '1');
 
 const urlTarget = resolveDesktopFrontendTarget({ frontendUrl: 'http://localhost:3001' });
 assert.equal(urlTarget.type, 'url');

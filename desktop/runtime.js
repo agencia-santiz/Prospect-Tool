@@ -60,7 +60,7 @@ export const resolveDesktopRuntime = (overrides = {}) => {
   const backendUrl = typeof overrides.backendUrl === 'string' && overrides.backendUrl.trim()
     ? overrides.backendUrl.trim()
     : buildUrl(backendHost, backendPort);
-  const openDevTools = parseBoolean(overrides.openDevTools, true);
+  const openDevTools = parseBoolean(overrides.openDevTools, false);
 
   return {
     frontendHost,

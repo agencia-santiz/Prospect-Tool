@@ -1,7 +1,11 @@
 {
   "name": "bloom-leads",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agencia-santiz/Prospect-Tool.git"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -12,6 +16,7 @@
     "desktop:run": "electron desktop/main.js",
     "desktop:pack": "npm run build && electron-builder --dir",
     "desktop:installer": "npm run build && electron-builder --win nsis --x64",
+    "desktop:publish": "npm run build && electron-builder --win nsis --x64 --publish always",
     "desktop:feed:stage": "node scripts/desktop-feed.mjs stage",
     "desktop:feed:serve": "node scripts/desktop-feed.mjs serve",
     "desktop:release:smoke": "node scripts/desktop-release-smoke.mjs",
@@ -73,6 +78,13 @@
         "nsis"
       ]
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "agencia-santiz",
+        "repo": "Prospect-Tool"
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

@@ -1,4 +1,4 @@
-export const buildDesktopMenuTemplate = (window) => ([
+export const buildDesktopMenuTemplate = (window, updateController = null) => ([
   {
     label: 'File',
     submenu: [
@@ -45,6 +45,28 @@ export const buildDesktopMenuTemplate = (window) => ([
             mode: 'right',
             activate: true,
           });
+        },
+      },
+      {
+        label: 'Verificar atualizações',
+        enabled: Boolean(updateController?.enabled),
+        click: async () => {
+          if (!updateController?.enabled) {
+            return;
+          }
+
+          await updateController.checkForUpdates();
+        },
+      },
+      {
+        label: 'Reiniciar para atualizar',
+        enabled: Boolean(updateController?.enabled && updateController.canInstallDownloadedUpdate?.()),
+        click: async () => {
+          if (!updateController?.enabled) {
+            return;
+          }
+
+          await updateController.installDownloadedUpdate();
         },
       },
       { type: 'separator' },

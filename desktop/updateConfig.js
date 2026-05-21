@@ -49,13 +49,17 @@ const normalizeUrl = (value) => {
 
 export const resolveDesktopUpdateConfig = (overrides = {}) => {
   const disabled = parseBoolean(overrides.disabled, false);
+  const packaged = parseBoolean(overrides.packaged, false);
   const updateUrl = normalizeUrl(overrides.updateUrl);
   const updateChannel = normalizeText(overrides.updateChannel);
+  const provider = normalizeText(overrides.provider) || (updateUrl ? 'generic' : 'github');
   const autoDownload = parseBoolean(overrides.autoDownload, DEFAULT_UPDATE_AUTO_DOWNLOAD);
   const checkOnStartup = parseBoolean(overrides.checkOnStartup, DEFAULT_UPDATE_CHECK_ON_STARTUP);
 
   return {
-    enabled: !disabled && updateUrl.length > 0,
+    enabled: !disabled && (updateUrl.length > 0 || packaged),
+    packaged,
+    provider,
     updateUrl,
     updateChannel,
     autoDownload,

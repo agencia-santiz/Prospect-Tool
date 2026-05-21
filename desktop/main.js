@@ -20,6 +20,7 @@ const runtime = resolveDesktopRuntime({
   backendHost: process.env.BLOOM_BACKEND_HOST,
   backendPort: process.env.BLOOM_BACKEND_PORT,
   backendUrl: process.env.BLOOM_BACKEND_URL,
+  openDevTools: process.env.BLOOM_DESKTOP_OPEN_DEVTOOLS,
 });
 
 let mainWindow = null;
@@ -60,8 +61,7 @@ const loadFrontend = async (window) => {
 };
 
 const shouldOpenDevTools = () => {
-  const normalized = String(process.env.BLOOM_DESKTOP_OPEN_DEVTOOLS ?? '1').trim().toLowerCase();
-  return !['0', 'false', 'no', 'off'].includes(normalized);
+  return Boolean(runtime.openDevTools);
 };
 
 const startDesktopBackend = async () => {
@@ -124,6 +124,8 @@ const createWindow = async () => {
     },
   });
 
+  mainWindow = window;
+
   window.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -142,11 +144,17 @@ const createWindow = async () => {
       activate: true,
     });
   }
-  Menu.setApplicationMenu(Menu.buildFromTemplate(buildDesktopMenuTemplate(window)));
-  mainWindow = window;
   getDesktopLogger().info({
     event: 'desktop_window_ready',
   });
+};
+
+const applyDesktopMenu = () => {
+  if (!mainWindow) {
+    return;
+  }
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(buildDesktopMenuTemplate(mainWindow, updateController)));
 };
 
 if (!app.requestSingleInstanceLock()) {
@@ -175,13 +183,22 @@ app.whenReady().then(async () => {
 
     await startDesktopBackend();
     await createWindow();
+    applyDesktopMenu();
     updateController = createDesktopAutoUpdateController({
       disabled: !app.isPackaged || process.env.BLOOM_DESKTOP_DISABLE_UPDATES,
+      packaged: app.isPackaged,
+      provider: process.env.BLOOM_UPDATE_PROVIDER,
       updateUrl: process.env.BLOOM_UPDATE_URL,
       updateChannel: process.env.BLOOM_UPDATE_CHANNEL,
       autoDownload: process.env.BLOOM_UPDATE_AUTO_DOWNLOAD,
       checkOnStartup: process.env.BLOOM_UPDATE_CHECK_ON_STARTUP,
     }, getDesktopLogger());
+
+    updateController.subscribe(() => {
+      applyDesktopMenu();
+    });
+
+    applyDesktopMenu();
 
     if (updateController.enabled) {
       void updateController.checkForUpdates();

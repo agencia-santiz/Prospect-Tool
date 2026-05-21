@@ -7,6 +7,7 @@ const disabledConfig = resolveDesktopUpdateConfig({
 });
 
 assert.equal(disabledConfig.enabled, false);
+assert.equal(disabledConfig.provider, 'generic');
 assert.equal(disabledConfig.updateUrl, 'https://updates.example.com/bloom');
 assert.equal(disabledConfig.autoDownload, true);
 assert.equal(disabledConfig.checkOnStartup, true);
@@ -19,10 +20,18 @@ const enabledConfig = resolveDesktopUpdateConfig({
 });
 
 assert.equal(enabledConfig.enabled, true);
+assert.equal(enabledConfig.provider, 'generic');
 assert.equal(enabledConfig.updateUrl, 'https://updates.example.com/bloom');
 assert.equal(enabledConfig.updateChannel, 'beta');
 assert.equal(enabledConfig.autoDownload, false);
 assert.equal(enabledConfig.checkOnStartup, false);
+
+const packagedConfig = resolveDesktopUpdateConfig({
+  packaged: true,
+});
+
+assert.equal(packagedConfig.enabled, true);
+assert.equal(packagedConfig.provider, 'github');
 
 const invalidConfig = resolveDesktopUpdateConfig({
   updateUrl: 'not-a-valid-url',
@@ -30,4 +39,3 @@ const invalidConfig = resolveDesktopUpdateConfig({
 
 assert.equal(invalidConfig.enabled, false);
 assert.equal(invalidConfig.updateUrl, '');
-

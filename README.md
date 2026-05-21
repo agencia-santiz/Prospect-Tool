@@ -50,11 +50,20 @@ Se voce quer a trilha desktop executavel + backend hibrido, leia [BACKLOG_HIBRID
    `npm run desktop:release:smoke`
 
 O empacotamento desktop local usa `asar: false` nesta fase para manter o instalador Windows estavel com o fluxo atual do Electron Builder.
-O auto-update desktop fica ativo no app empacotado quando `BLOOM_UPDATE_URL` aponta para um feed HTTP(S) valido com os arquivos gerados pelo `electron-builder`.
-Para teste local, o feed padrao fica em `updates/windows-x64` e pode ser servido em `http://127.0.0.1:8090/windows-x64`.
+O auto-update desktop fica ativo no app empacotado via GitHub Releases quando a build publica `latest.yml`, o instalador `.exe` e o `.blockmap` no release correto.
+Para teste local, ainda e possivel apontar `BLOOM_UPDATE_URL` para um feed HTTP(S) valido e servir o diretório `updates/windows-x64` em `http://127.0.0.1:8090/windows-x64`.
+No menu `Window`, o app empacotado traz `Abrir console`, `Verificar atualizações` e `Reiniciar para atualizar`.
 O estado local do desktop fica em `userData/persistent-state.json`, o que substitui o papel estrutural do `localStorage` para o core do app.
 Os logs persistentes do desktop ficam em `userData/logs/desktop.log`, com rotacao simples.
 O guia de operacao e recuperacao do desktop fica em [docs/DESKTOP_OPERACAO_RECUPERACAO.md](./docs/DESKTOP_OPERACAO_RECUPERACAO.md).
+
+Para publicar uma versao nova com auto-update no GitHub Releases:
+
+1. Suba a versao no `package.json`
+2. Crie e envie uma tag no formato `v0.0.5`
+3. Rode o workflow `Desktop Release`
+
+O workflow compila o instalador e publica os artefatos no release do GitHub para o updater consumir automaticamente.
 
 ## Deploy online
 

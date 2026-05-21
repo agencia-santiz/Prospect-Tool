@@ -123,8 +123,10 @@ Isso gera perda de tempo, duplicidade de registros, baixa visibilidade do funil 
 - O corrompimento visual de texto em alguns trechos de docs e UI foi normalizado nos arquivos afetados.
 - A trilha hibrida desktop foi iniciada com shell Electron, bootstrap local do backend e comandos de dev dedicados.
 - O instalador Windows da trilha desktop hibrida foi gerado com sucesso, usando `asar: false` nesta fase para compatibilidade com o empacotamento local.
-- O desktop empacotado agora suporta auto-update via `electron-updater` quando `BLOOM_UPDATE_URL` aponta para um feed HTTP(S) valido.
-- O projeto agora possui um feed local de update em `updates/windows-x64`, com scripts para stage e serve dos artefatos gerados.
+- O desktop empacotado agora suporta auto-update via `electron-updater` com GitHub Releases em producao e feed HTTP(S) local para depuracao.
+- O projeto continua com um feed local de update em `updates/windows-x64`, com scripts para stage e serve dos artefatos gerados.
+- O menu nativo do desktop ganhou as acoes `Abrir console`, `Verificar atualizações` e `Reiniciar para atualizar`.
+- Existe um workflow GitHub Actions para publicar o instalador e os artefatos do updater quando uma tag `v*` e enviada.
 - O desktop passou a usar armazenamento local em arquivo para o core do workspace e preferencias de interface, reduzindo a dependencia estrutural de `localStorage`.
 - A ponte de migracao do `localStorage` legado para o armazenamento novo foi implementada como rotina idempotente de primeira abertura no desktop.
 - O desktop passou a registrar uma outbox local de mutacoes de workspace para servir de base ao sync futuro.

@@ -8,7 +8,9 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const electronCli = path.join(rootDir, 'node_modules', 'electron', 'cli.js');
 const viteCli = path.join(rootDir, 'node_modules', 'vite', 'bin', 'vite.js');
 
-const runtime = resolveDesktopRuntime();
+const runtime = resolveDesktopRuntime({
+  openDevTools: true,
+});
 const env = createDesktopRuntimeEnv(runtime);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

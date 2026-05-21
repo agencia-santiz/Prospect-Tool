@@ -39,6 +39,5 @@ export const resolveBackendBaseUrl = (hostname) => {
 };
 
 export const getBackendBaseUrl = () => {
-  const viteEnv = import.meta.env ?? {};
-  return String(viteEnv.VITE_BACKEND_URL || resolveBackendBaseUrl()).replace(/\/$/, '');
+  return String(resolveBackendBaseUrl()).replace(/\/$/, '');
 };

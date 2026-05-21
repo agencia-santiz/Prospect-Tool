@@ -29,7 +29,6 @@ import { getCompanyContactKey, migrateContactedKeys } from './utils/companyIdent
 import { getSegmentSuggestions, resolveSegmentQuery } from './utils/segmentDatabase.js';
 import { getCompanyWhatsAppStatus, setCompanyWhatsAppStatusOverride, readStoredWhatsAppStatusOverrides, writeStoredWhatsAppStatusOverrides } from './utils/whatsappStatusStore.js';
 import { readPersistentValue, writePersistentValue } from './utils/persistentStorage.js';
-import { fetchOpenDataLeads } from './services/openDataService.js';
 import { createWorkspaceRemoteSnapshot, flushWorkspaceOutboxRecords } from './services/workspaceSyncService.js';
 import { firebaseDataConnect, isDataConnectSyncEnabled } from './lib/firebase';
 import { formatCurrency } from './utils/estimation';
@@ -561,10 +560,10 @@ const App: React.FC = () => {
         return enrichedLeads;
       }
     } catch (error) {
-      console.warn('Backend enrichment failed, trying open data fallback.', error);
+      console.warn('Backend enrichment failed.', error);
     }
 
-    return fetchOpenDataLeads(city, segment, excludeNames, desiredQuantity);
+    return [];
   };
 
   // --- CONTACTED HANDLER ---

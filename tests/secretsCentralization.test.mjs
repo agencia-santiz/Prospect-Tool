@@ -19,6 +19,9 @@ assert.ok(!frontendGeminiService.includes('process.env.API_KEY'));
 assert.ok(frontendGeminiService.includes('/search/enrich'));
 assert.ok(!frontendGeminiService.includes('VITE_BACKEND_URL'));
 
+const frontendApp = await readFile(join(repoRoot, 'src/App.tsx'), 'utf8');
+assert.ok(!frontendApp.includes('fetchOpenDataLeads'));
+
 const frontendFirebase = await readFile(join(repoRoot, 'src/lib/firebase.ts'), 'utf8');
 assert.ok(frontendFirebase.includes('isDesktopRuntime'));
 assert.ok(frontendFirebase.includes('!isDesktopRuntime'));

@@ -1,4 +1,4 @@
-export const buildDesktopMenuTemplate = (window, updateController = null) => ([
+export const buildDesktopMenuTemplate = (window, updateController = null, onUpdateCheck = null) => ([
   {
     label: 'File',
     submenu: [
@@ -48,11 +48,15 @@ export const buildDesktopMenuTemplate = (window, updateController = null) => ([
         },
       },
       {
-        label: 'Verificar atualizações',
+        label: 'Verificar atualizaÃ§Ãµes',
         enabled: Boolean(updateController?.enabled),
         click: async () => {
           if (!updateController?.enabled) {
             return;
+          }
+
+          if (typeof onUpdateCheck === 'function') {
+            onUpdateCheck();
           }
 
           await updateController.checkForUpdates();

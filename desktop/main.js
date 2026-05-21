@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, Menu, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, Menu, dialog, ipcMain, shell } from 'electron';
 import { createDesktopLogger } from './logger.js';
 import { buildDesktopMenuTemplate } from './menu.js';
 import { createDesktopPersistentStorage, registerDesktopPersistentStorageIpc } from './persistence.js';
@@ -154,7 +154,23 @@ const applyDesktopMenu = () => {
     return;
   }
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(buildDesktopMenuTemplate(mainWindow, updateController)));
+  Menu.setApplicationMenu(Menu.buildFromTemplate(buildDesktopMenuTemplate(
+    mainWindow,
+    updateController,
+    () => {
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        return;
+      }
+
+      void dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Atualizações',
+        message: 'Verificação de atualizações iniciada.',
+        detail: 'O aplicativo vai consultar o feed configurado e, se houver uma versão nova, baixar em segundo plano.',
+        buttons: ['OK'],
+      });
+    },
+  )));
 };
 
 if (!app.requestSingleInstanceLock()) {

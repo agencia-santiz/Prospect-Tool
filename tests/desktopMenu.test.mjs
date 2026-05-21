@@ -5,6 +5,7 @@ let opened = 0;
 let closed = 0;
 let checked = 0;
 let installed = 0;
+let notified = 0;
 
 const fakeWindow = {
   isDestroyed: () => false,
@@ -30,7 +31,9 @@ const fakeUpdateController = {
   },
 };
 
-const menu = buildDesktopMenuTemplate(fakeWindow, fakeUpdateController);
+const menu = buildDesktopMenuTemplate(fakeWindow, fakeUpdateController, () => {
+  notified += 1;
+});
 const windowMenu = menu.find((item) => item.label === 'Window');
 
 assert.ok(windowMenu);
@@ -40,10 +43,10 @@ const consoleItem = windowMenu.submenu.find((item) => item.label === 'Abrir cons
 assert.ok(consoleItem);
 assert.equal(typeof consoleItem.click, 'function');
 
-const checkUpdatesItem = windowMenu.submenu.find((item) => item.label === 'Verificar atualizações');
+const checkUpdatesItem = windowMenu.submenu.find((item) => String(item.label || '').startsWith('Verificar'));
 assert.ok(checkUpdatesItem);
 
-const restartUpdateItem = windowMenu.submenu.find((item) => item.label === 'Reiniciar para atualizar');
+const restartUpdateItem = windowMenu.submenu.find((item) => String(item.label || '').startsWith('Reiniciar para atualizar'));
 assert.ok(restartUpdateItem);
 
 consoleItem.click();
@@ -57,6 +60,7 @@ assert.equal(closed, 1);
 
 await checkUpdatesItem.click();
 assert.equal(checked, 1);
+assert.equal(notified, 1);
 
 await restartUpdateItem.click();
 assert.equal(installed, 1);
